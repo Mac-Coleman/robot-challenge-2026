@@ -8,7 +8,7 @@ class Receiver
 {
   public:
     Receiver(const char* robot_name, const char* robot_password);
-    void begin();
+    bool begin();
     void receive();
     float leftStickX();
     float leftStickY();
@@ -22,11 +22,16 @@ class Receiver
     bool triggerRight();
     bool bumperLeft();
     bool bumperRight();
+    const char* getName();
+    const char* getPassword();
+    IPAddress getIpAddress();
+    String getSSID();
+    bool getAlive();
   private:
     void _acknowledge(int message);
     const char* _robot_name;
     const char* _robot_password;
-    WifiServer _server;
+    WiFiServer _server;
     float _leftStickX;
     float _leftStickY;
     float _rightStickX;
@@ -39,6 +44,8 @@ class Receiver
     bool _triggerRight;
     bool _bumperLeft;
     bool _bumperRight;
+    bool _alive;
+    unsigned long _lastReceive;
 };
 
 #endif

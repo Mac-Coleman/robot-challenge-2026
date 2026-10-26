@@ -8,9 +8,8 @@
 #include "WiFi.h"
 #include "Receiver.h"
 
-Receiver::Receiver(Stream output, const char* robot_name, const char* robot_password)
+Receiver::Receiver(const char* robot_name, const char* robot_password)
 {
-  _stream = output;
   _robot_name = robot_name;
   _robot_password = robot_password;
   _leftStickX = 0.0f;
@@ -25,22 +24,46 @@ Receiver::Receiver(Stream output, const char* robot_name, const char* robot_pass
   _bumperRight = false;
   _triggerLeft = false;
   _triggerRight = false;
-  WifiServer _server(80);
+  _alive = false;
+  _lastReceive = 0;
+  WiFiServer _server(80);
 }
 
-void Receiver::begin()
+const char* Receiver::getName()
 {
-  WiFi.softAP(_robot_name, _robot_password);
-  WiFi.softAPsetHostname(_robot_name);
-  IPAddress ip = Wifi.softAPIP();
-  _stream.print("Your robot ");
-  _stream.print(_robot_name);
-  _stream.print(" will now listen on the Wi-Fi network '");
-  _stream.print(_robot_name);
-  _stream.print("' with IP address ");
-  _stream.println(ip);
+  return _robot_name;
+}
+
+const char* Receiver::getPassword()
+{
+  return _robot_password;
+}
+
+String Receiver::getSSID()
+{
+  return WiFi.softAPSSID();
+}
+
+IPAddress Receiver::getIpAddress()
+{
+  return WiFi.softAPIP();
+}
+
+bool Receiver::begin()
+{
+  bool ret = WiFi.softAP(_robot_name, _robot_password);
+  if (!ret) {
+    return ret;
+  }
+  ret = WiFi.softAPsetHostname(_robot_name);
+  return ret;
 }
 
 void Receiver::receive()
 {
+}
+
+bool Receiver::getAlive()
+{
+  return _alive;
 }
