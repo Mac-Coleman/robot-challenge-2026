@@ -1,0 +1,19 @@
+{
+    "name": "Receiver",
+    "keywords": "Robot Challenge, Receiver, ESP32",
+    "description": "A class for easily receiving the state of a gamepad over Wi-Fi in Access Point mode for ESP32-based MCUs.",
+    "homepage": "",
+    "repository": {
+        "type": "git",
+        "url": ""
+    },
+    "version": "0.0.0",
+    "authors": {
+        "name": "Mac Coleman",
+        "email": "wcoleman@cornellcollege.edu"
+    },
+    "frameworks": "arduino",
+    "platforms": "esp32",
+    "dependencies": {
+    }
+}

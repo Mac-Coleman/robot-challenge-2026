@@ -1,0 +1,4 @@
+Receiver KEYWORD1
+
+begin KEYWORD2
+receive KEYWORD2
