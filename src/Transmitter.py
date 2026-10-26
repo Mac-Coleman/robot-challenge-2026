@@ -2,12 +2,54 @@ import pygame, sys, math
 
 # Really, really bad controller visualizer to assist in using the robots.
 
+# Robot control protocol thoughts:
+# 4 bytes for floats for analog controls
+# Digital buttons packed into bitfields
+# Base64 encoded
+
+# 4-byte "control message number"
+#   - The ESP32 should respond with this number to indicate that it has acknowledged the message.
+# 2 bytes: button bitfield
+#   - Smallest bit to largest bit:
+#     - Right Bumper
+#     - Left Bumper
+#     - Start
+#     - Back
+#     - A
+#     - B
+#     - X
+#     - Y
+#     - Right Stick
+#     - Left Stick
+#     - Reserved
+#     - Reserved
+#     - Reserved
+#     - Reserved
+#     - Reserved
+#     - Reserved
+# 1 byte: D-pad direction
+#   - Smallest to largest bit:
+#     - East
+#     - Northeast
+#     - North
+#     - Northwest
+#     - West
+#     - Southwest
+#     - South
+#     - Southeast
+# 4 bytes: Right trigger (float)
+# 4 bytes: Left trigger (float)
+# 4 bytes: Right stick X (float)
+# 4 bytes: Right stick Y (float)
+# 4 bytes: Left stick X (float)
+# 4 bytes: Left stick Y (float)
+
 pygame.init()
 label_font = pygame.font.SysFont('lucidaconsole', 12)
 button_font = pygame.font.SysFont('lucidaconsole', 32)
 
 width, height = 1000, 1000
-screen = pygame.display.set_mode(size=(width, height), flags=pygame.SCALED)
+screen = pygame.display.set_mode(size=(width, height), flags=pygame.SCALED | pygame.RESIZABLE)
 pygame.display.set_caption("Cornell College Engineering Club Robot Controller")
 
 
@@ -42,9 +84,9 @@ start_label = button_font.render("START", True, PLATINUM)
 bl_rect = back_label.get_rect()
 sl_rect = start_label.get_rect()
 
-screen.fill(DARK_GRAPHITE)
-
 while True:
+    screen.fill(DARK_GRAPHITE)
+
     # Read current input state
     keys = pygame.key.get_pressed()
 
@@ -136,7 +178,11 @@ while True:
             dpad_centroid[0] + math.cos(math.radians(angle)) * 90,
             dpad_centroid[1] - math.sin(math.radians(angle)) * 90
         )
-        pygame.draw.line(screen, BLUE, dpad_centroid, dpad_endpoint, 20)
+        pygame.draw.circle(screen, PLATINUM, dpad_centroid, 14)
+        pygame.draw.line(screen, PLATINUM, dpad_centroid, dpad_endpoint, 23)
+        pygame.draw.circle(screen, PLATINUM, dpad_endpoint, 22)
+        pygame.draw.circle(screen, BLUE, dpad_centroid, 12)
+        pygame.draw.line(screen, BLUE, dpad_centroid, dpad_endpoint, 19)
         pygame.draw.circle(screen, BLUE, dpad_endpoint, 20)
 
 
@@ -181,8 +227,15 @@ while True:
     screen.blit(back_label, bl_rect)
     screen.blit(start_label, sl_rect)
 
+    status = "Connecting to your robot..." if pygame.key.get_focused() else "Click this window to control your robot!"
+
+    status_label = button_font.render(status, True, PLATINUM)
+    status_rect = status_label.get_rect()
+    status_rect.center = (width//2, 35)
+    screen.blit(status_label, status_rect)
+
     for event in pygame.event.get():
         if event.type==pygame.QUIT:
             pygame.quit()
             sys.exit()
-    pygame.display.update()
+    pygame.display.flip()
