@@ -37,6 +37,8 @@ class Receiver
     float _leftStickY;
     float _rightStickX;
     float _rightStickY;
+    bool _buttonStart;
+    bool _buttonBack;
     bool _buttonY;
     bool _buttonB;
     bool _buttonA;
@@ -45,6 +47,8 @@ class Receiver
     bool _triggerRight;
     bool _bumperLeft;
     bool _bumperRight;
+    bool _buttonStickLeft;
+    bool _buttonStickRight;
     bool _alive;
     unsigned long _lastReceive;
 };

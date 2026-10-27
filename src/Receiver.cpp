@@ -10,6 +10,27 @@
 #include "Receiver.h"
 #include "base64.hpp"
 
+const uint16_t right_bumper_mask = 1 << 0;
+const uint16_t left_bumper_mask  = 1 << 1;
+const uint16_t start_mask        = 1 << 2;
+const uint16_t back_mask         = 1 << 3;
+const uint16_t ba_mask           = 1 << 4;
+const uint16_t bb_mask           = 1 << 5;
+const uint16_t bx_mask           = 1 << 6;
+const uint16_t by_mask           = 1 << 7;
+const uint16_t right_stick_mask  = 1 << 8;
+const uint16_t left_stick_mask   = 1 << 9;
+
+const uint8_t D_NONE      = 0;
+const uint8_t D_EAST      = 1 << 0;
+const uint8_t D_NORTHEAST = 1 << 1;
+const uint8_t D_NORTH     = 1 << 2;
+const uint8_t D_NORTHWEST = 1 << 3;
+const uint8_t D_WEST      = 1 << 4;
+const uint8_t D_SOUTHWEST = 1 << 5;
+const uint8_t D_SOUTH     = 1 << 6;
+const uint8_t D_SOUTHEAST = 1 << 7;
+
 typedef struct __attribute__((__packed__)) {
   uint32_t control_number;
   uint16_t button_field;
@@ -118,7 +139,7 @@ void Receiver::receive()
   GamepadMessage gamepad;
   memcpy(&gamepad, decoded_buffer, sizeof(GamepadMessage));
 
-  log_i("#, Gamepad left trigger: %d, %f", gamepad.control_number, gamepad.left_trigger);
+  //log_i("#, Gamepad left trigger: %d, %f", gamepad.control_number, gamepad.left_trigger);
 
   if (!validateGamepadMessage(&gamepad)) {
     log_e("Gamepad message failed validation.");
@@ -134,7 +155,21 @@ void Receiver::receive()
   _triggerLeft = gamepad.left_trigger;
   _triggerRight = gamepad.right_trigger;
 
-  log_i("lx %f ly %f rx %f ry %f", _leftStickX, _leftStickY, _rightStickX, _rightStickY);
+  _bumperRight      = (gamepad.button_field & right_bumper_mask) != 0;
+  _bumperLeft       = (gamepad.button_field & left_bumper_mask) != 0;
+  _buttonStart      = (gamepad.button_field & start_mask) != 0;
+  _buttonBack       = (gamepad.button_field & back_mask) != 0;
+  _buttonA          = (gamepad.button_field & ba_mask) != 0;
+  _buttonB          = (gamepad.button_field & bb_mask) != 0;
+  _buttonX          = (gamepad.button_field & bx_mask) != 0;
+  _buttonY          = (gamepad.button_field & by_mask) != 0;
+  _buttonStickLeft  = (gamepad.button_field & left_stick_mask) != 0;
+  _buttonStickRight = (gamepad.button_field & right_stick_mask) != 0;
+
+  log_i("a %d b %d x %d y %d", _buttonA, _buttonB, _buttonX, _buttonY);
+
+
+  //log_i("lx %f ly %f rx %f ry %f", _leftStickX, _leftStickY, _rightStickX, _rightStickY);
 
 }
 
