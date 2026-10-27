@@ -52,6 +52,8 @@ void loop()
     delay(100);
     receiver.receive();
 
+    digitalWrite(5, !receiver.buttonY());
+
     if (!receiver.getAlive()) 
     {
         //Write your robot's "safe mode" here!

@@ -178,6 +178,11 @@ bool Receiver::getAlive()
   return _alive;
 }
 
+bool Receiver::buttonY()
+{
+  return _buttonY;
+}
+
 bool validateGamepadMessage(GamepadMessage *message)
 {
   if (isnan(message->right_trigger) or isinf(message->right_trigger) or message->right_trigger < -1.0f or message->right_trigger > 1.0f)
