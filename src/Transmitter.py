@@ -1,4 +1,4 @@
-import pygame, sys, math, argparse
+import pygame, sys, math, argparse, struct, base64
 
 # Really, really bad controller visualizer to assist in using the robots.
 
@@ -84,9 +84,24 @@ def pack_message(keys): #When we get controllers, this should not be based on ke
 
     d_pad_bytes = d_pad_number.to_bytes(1, byteorder='little')
 
-    message_bytes = b"".join([control_message_number_bytes, button_bytes, d_pad_bytes])
+    rt_value = 1.0 if keys[pygame.K_9] else 0.0
+    lt_value = 1.0 if keys[pygame.K_2] else 0.0
+    lsx_value = 1.0 if keys[pygame.K_d] else -1.0 if keys[pygame.K_a] else 0.0
+    lsy_value = 1.0 if keys[pygame.K_s] else -1.0 if keys[pygame.K_w] else 0.0
+    rsx_value = 1.0 if keys[pygame.K_l] else -1.0 if keys[pygame.K_j] else 0.0
+    rsy_value = 1.0 if keys[pygame.K_k] else -1.0 if keys[pygame.K_i] else 0.0
+
+    rt_bytes = struct.pack('<f', rt_value)
+    lt_bytes = struct.pack('<f', lt_value)
+    lsx_bytes = struct.pack('<f', lsx_value)
+    lsy_bytes = struct.pack('<f', lsy_value)
+    rsx_bytes = struct.pack('<f', rsx_value)
+    rsy_bytes = struct.pack('<f', rsy_value)
+
+    message_bytes = b"".join([control_message_number_bytes, button_bytes, d_pad_bytes, rt_bytes, lt_bytes, rsx_bytes, rsy_bytes, lsx_bytes, lsy_bytes])
     
-    print(f"{int.from_bytes(message_bytes, byteorder='little'):056b}")
+    #print(f"{int.from_bytes(message_bytes, byteorder='little'):0248b}")
+    print(base64.b64encode(message_bytes))
 
     _message_number += 1
 
@@ -247,13 +262,19 @@ def main():
 
 
         # Analog stick indicators
+        
+        lsx_value = 1.0 if keys[pygame.K_d] else -1.0 if keys[pygame.K_a] else 0.0
+        lsy_value = 1.0 if keys[pygame.K_s] else -1.0 if keys[pygame.K_w] else 0.0
+        rsx_value = 1.0 if keys[pygame.K_l] else -1.0 if keys[pygame.K_j] else 0.0
+        rsy_value = 1.0 if keys[pygame.K_k] else -1.0 if keys[pygame.K_i] else 0.0
+
         left_stick_pos = (
-            left_stick_box[0] + 0 * left_stick_box[2]//2 + left_stick_box[2]//2,
-            left_stick_box[1] + 0 * left_stick_box[3]//2 + left_stick_box[3]//2
+            left_stick_box[0] + lsx_value * left_stick_box[2]//2 + left_stick_box[2]//2,
+            left_stick_box[1] + lsy_value * left_stick_box[3]//2 + left_stick_box[3]//2
         )
         right_stick_pos = (
-            right_stick_box[0] + 0 * right_stick_box[2]//2 + right_stick_box[2]//2,
-            right_stick_box[1] + 0 * right_stick_box[3]//2 + right_stick_box[3]//2
+            right_stick_box[0] + rsx_value * right_stick_box[2]//2 + right_stick_box[2]//2,
+            right_stick_box[1] + rsy_value * right_stick_box[3]//2 + right_stick_box[3]//2
         )
 
         pygame.draw.circle(screen, PLATINUM, left_stick_pos, 17 if keys[pygame.K_4] else 12)
