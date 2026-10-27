@@ -10,6 +10,18 @@
 #include "Receiver.h"
 #include "base64.hpp"
 
+typedef struct __attribute__((__packed__)) {
+  uint32_t control_number;
+  uint16_t button_field;
+  uint8_t dpad;
+  float_t right_trigger;
+  float_t left_trigger;
+  float_t right_stick_x;
+  float_t right_stick_y;
+  float_t left_stick_x;
+  float_t left_stick_y;
+} GamepadMessage;
+
 Receiver::Receiver(const char* robot_name, const char* robot_password)
 {
   _robot_name = robot_name;
@@ -94,7 +106,18 @@ void Receiver::receive()
   if (decoded_length < 256) {
     decoded_buffer[decoded_length] = '\0';
   };
-  log_i("Decoded content: '%s'",(char *) decoded_buffer);
+  log_d("Decoded content: '%s'",(char *) decoded_buffer);
+
+  if (decoded_length != sizeof(GamepadMessage)) {
+    log_e("Decoded message has invalid size %d.", decoded_length);
+    return;
+  };
+
+  GamepadMessage gamepad;
+  memcpy(&gamepad, decoded_buffer, sizeof(GamepadMessage));
+
+  log_i("#, Gamepad left trigger: %d, %f", gamepad.control_number, gamepad.left_trigger);
+
 }
 
 bool Receiver::getAlive()
