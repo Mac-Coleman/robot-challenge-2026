@@ -49,10 +49,12 @@ void loop()
 {
     //This will make sure that the gamepad values are as up-to-date as possible.
     //You should call this at the beginning of your loop()!
-    delay(100);
     receiver.receive();
 
     digitalWrite(5, !receiver.buttonY());
+    digitalWrite(6, !receiver.buttonX());
+    digitalWrite(7, !receiver.buttonB());
+    digitalWrite(15, !receiver.buttonA());
 
     if (!receiver.getAlive()) 
     {

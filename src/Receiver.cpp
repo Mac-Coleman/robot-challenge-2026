@@ -178,6 +178,21 @@ bool Receiver::getAlive()
   return _alive;
 }
 
+bool Receiver::buttonA()
+{
+  return _buttonA;
+}
+
+bool Receiver::buttonB()
+{
+  return _buttonB;
+}
+
+bool Receiver::buttonX()
+{
+  return _buttonX;
+}
+
 bool Receiver::buttonY()
 {
   return _buttonY;
