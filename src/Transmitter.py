@@ -1,4 +1,4 @@
-import pygame, sys, math
+import pygame, sys, math, argparse
 
 # Really, really bad controller visualizer to assist in using the robots.
 
@@ -44,6 +44,16 @@ import pygame, sys, math
 # 4 bytes: Left stick X (float)
 # 4 bytes: Left stick Y (float)
 
+parser = argparse.ArgumentParser(
+    prog='Robot Controller',
+    description='Allows you to control an ESP32 robot over Wi-Fi.'
+)
+
+parser.add_argument('-f', '--fps-limit', action='store', default=60, type=int)
+
+args = parser.parse_args()
+print(f"Framerate will be capped to {args.fps_limit} FPS.")
+
 pygame.init()
 label_font = pygame.font.SysFont('lucidaconsole', 12)
 button_font = pygame.font.SysFont('lucidaconsole', 32)
@@ -51,6 +61,8 @@ button_font = pygame.font.SysFont('lucidaconsole', 32)
 width, height = 1000, 1000
 screen = pygame.display.set_mode(size=(width, height), flags=pygame.SCALED | pygame.RESIZABLE)
 pygame.display.set_caption("Cornell College Engineering Club Robot Controller")
+
+clock = pygame.time.Clock()
 
 
 DARK_GRAPHITE = (25, 23, 24)
@@ -233,6 +245,8 @@ while True:
     status_rect = status_label.get_rect()
     status_rect.center = (width//2, 35)
     screen.blit(status_label, status_rect)
+
+    clock.tick(args.fps_limit)
 
     for event in pygame.event.get():
         if event.type==pygame.QUIT:
