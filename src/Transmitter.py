@@ -44,212 +44,263 @@ import pygame, sys, math, argparse
 # 4 bytes: Left stick X (float)
 # 4 bytes: Left stick Y (float)
 
-parser = argparse.ArgumentParser(
-    prog='Robot Controller',
-    description='Allows you to control an ESP32 robot over Wi-Fi.'
-)
+_message_number = 0
 
-parser.add_argument('-f', '--fps-limit', action='store', default=60, type=int)
+def pack_message(keys): #When we get controllers, this should not be based on keys, this is just for testing.
+    global _message_number
+    control_message_number_bytes = _message_number.to_bytes(4, byteorder='little')
 
-args = parser.parse_args()
-print(f"Framerate will be capped to {args.fps_limit} FPS.")
+    button_number = 0
+    button_number |= int(keys[pygame.K_0]) << 0
+    button_number |= int(keys[pygame.K_1]) << 1
+    button_number |= int(keys[pygame.K_8]) << 2
+    button_number |= int(keys[pygame.K_3]) << 3
+    button_number |= int(keys[pygame.K_DOWN]) << 4
+    button_number |= int(keys[pygame.K_RIGHT]) << 5
+    button_number |= int(keys[pygame.K_LEFT]) << 6
+    button_number |= int(keys[pygame.K_UP]) << 7
+    button_number |= int(keys[pygame.K_7]) << 8
+    button_number |= int(keys[pygame.K_4]) << 9
 
-pygame.init()
-label_font = pygame.font.SysFont('lucidaconsole', 12)
-button_font = pygame.font.SysFont('lucidaconsole', 32)
+    button_bytes = button_number.to_bytes(2, byteorder='little')
 
-width, height = 1000, 1000
-screen = pygame.display.set_mode(size=(width, height), flags=pygame.SCALED | pygame.RESIZABLE)
-pygame.display.set_caption("Cornell College Engineering Club Robot Controller")
-
-clock = pygame.time.Clock()
-
-
-DARK_GRAPHITE = (25, 23, 24)
-GRAPHITE = (61, 59, 60)
-BLUE = (64, 64, 255)
-PLATINUM = (235, 235, 235)
-RED = (255, 64, 64)
-
-yb_label = button_font.render('Y', True, PLATINUM)
-bb_label = button_font.render('B', True, PLATINUM)
-ab_label = button_font.render('A', True, PLATINUM)
-xb_label = button_font.render('X', True, PLATINUM)
-
-ybl_rect = yb_label.get_rect()
-bbl_rect = bb_label.get_rect()
-abl_rect = ab_label.get_rect()
-xbl_rect = xb_label.get_rect()
-
-lb_label = button_font.render('LB', True, PLATINUM)
-rb_label = button_font.render('RB', True, PLATINUM)
-lt_label = button_font.render('LT', True, PLATINUM)
-rt_label = button_font.render('RT', True, PLATINUM)
-
-lbl_rect = lb_label.get_rect()
-rbl_rect = rb_label.get_rect()
-ltl_rect = lt_label.get_rect()
-rtl_rect = rt_label.get_rect()
-
-back_label = button_font.render("BACK", True, PLATINUM)
-start_label = button_font.render("START", True, PLATINUM)
-bl_rect = back_label.get_rect()
-sl_rect = start_label.get_rect()
-
-while True:
-    screen.fill(DARK_GRAPHITE)
-
-    # Read current input state
-    keys = pygame.key.get_pressed()
-
-    # Analog stick boxes
-    left_stick_box = pygame.draw.rect(screen, GRAPHITE, (175, 100, 300, 300))
-    right_stick_box = pygame.draw.rect(screen, GRAPHITE, (width//2 + 25, 100, 300, 300))
-
-    pygame.draw.aaline(screen, PLATINUM, (175 + 300/2, 100), (175 + 300/2, 100 + 300))
-    pygame.draw.aaline(screen, PLATINUM, (175, 100 + 300/2), (175 + 300, 100 + 300/2))
-    
-    pygame.draw.aaline(screen, PLATINUM, (width//2 + 25 + 300/2, 100), (width//2 + 25 + 300/2, 100 + 300))
-    pygame.draw.aaline(screen, PLATINUM, (width//2 + 25, 100 + 300/2), (width//2 + 25 + 300, 100 + 300/2))
-
-    la_label = label_font.render("Left Analog Stick", True, PLATINUM)
-    la_label_rect = la_label.get_rect()
-    la_label_rect.center = (left_stick_box[0] + left_stick_box[2]//2, 90)
-    screen.blit(la_label, la_label_rect)
-
-    ra_label = label_font.render("Right Analog Stick", True, PLATINUM)
-    ra_label_rect = ra_label.get_rect()
-    ra_label_rect.center = (right_stick_box[0] + right_stick_box[2]//2, 90)
-    screen.blit(ra_label, ra_label_rect)
-
-    # Triggers
-    pygame.draw.rect(screen, PLATINUM if keys[pygame.K_2] else DARK_GRAPHITE, (48, 198, 104, 204))
-    pygame.draw.rect(screen, PLATINUM if keys[pygame.K_9] else DARK_GRAPHITE, (width-50-102, 198, 104, 204))
-    left_trigger_box = pygame.draw.rect(screen, BLUE if keys[pygame.K_2] else GRAPHITE, (50, 200, 100, 200))
-    right_trigger_box = pygame.draw.rect(screen, RED if keys[pygame.K_9] else GRAPHITE, (width-50-100, 200, 100, 200))
-
-    # Bumpers
-    pygame.draw.rect(screen, PLATINUM if keys[pygame.K_1] else DARK_GRAPHITE, (48, 98, 104, 79))
-    pygame.draw.rect(screen, PLATINUM if keys[pygame.K_0] else DARK_GRAPHITE, (width-50-102, 98, 104, 79))
-    left_bumper_box = pygame.draw.rect(screen, BLUE if keys[pygame.K_1] else GRAPHITE, (50, 100, 100, 75))
-    right_bumper_box = pygame.draw.rect(screen, RED if keys[pygame.K_0] else GRAPHITE, (width-50-100, 100, 100, 75))
-
-    # Start and Back
-    
-    pygame.draw.rect(screen, PLATINUM if keys[pygame.K_3] else DARK_GRAPHITE, (48, 200 + 200 + 23, 104, 79))
-    pygame.draw.rect(screen, PLATINUM if keys[pygame.K_8] else DARK_GRAPHITE, (width-50-102, 200 + 200 + 23, 104, 79))
-    back_box = pygame.draw.rect(screen, BLUE if keys[pygame.K_3] else GRAPHITE, (50, 200 + 200 + 25, 100, 75))
-    start_box = pygame.draw.rect(screen, RED if keys[pygame.K_8] else GRAPHITE, (width-50-100, 200 + 200 + 25, 100, 75))
-
-    # Buttons
-    buttons_centroid = (
-        right_stick_box[0] + right_stick_box[2]//2,
-        right_stick_box[1] + right_stick_box[3] + 50 + 100
-    )
-
-    pygame.draw.circle(screen, PLATINUM if keys[pygame.K_UP] else DARK_GRAPHITE, (buttons_centroid[0], buttons_centroid[1]-75), 42)
-    pygame.draw.circle(screen, PLATINUM if keys[pygame.K_DOWN] else DARK_GRAPHITE, (buttons_centroid[0], buttons_centroid[1]+75), 42)
-    pygame.draw.circle(screen, PLATINUM if keys[pygame.K_LEFT] else DARK_GRAPHITE, (buttons_centroid[0]-75, buttons_centroid[1]), 42)
-    pygame.draw.circle(screen, PLATINUM if keys[pygame.K_RIGHT] else DARK_GRAPHITE, (buttons_centroid[0]+75, buttons_centroid[1]), 42)
-
-    yb_box = pygame.draw.circle(screen, RED if keys[pygame.K_UP] else GRAPHITE, (buttons_centroid[0], buttons_centroid[1]-75), 40)
-    ab_box = pygame.draw.circle(screen, RED if keys[pygame.K_DOWN] else GRAPHITE, (buttons_centroid[0], buttons_centroid[1]+75), 40)
-    xb_box = pygame.draw.circle(screen, RED if keys[pygame.K_LEFT] else GRAPHITE, (buttons_centroid[0]-75, buttons_centroid[1]), 40)
-    bb_box = pygame.draw.circle(screen, RED if keys[pygame.K_RIGHT] else GRAPHITE, (buttons_centroid[0]+75, buttons_centroid[1]), 40)
-
-    # D-pad
-    dpad_centroid = (
-        left_stick_box[0] + left_stick_box[2]//2,
-        left_stick_box[1] + left_stick_box[3] + 50 + 100
-    )
-
-    angle = None
+    d_pad_number = 0
     if keys[pygame.K_KP6]:
-        angle = 0
+        d_pad_number = 1 << 0
     if keys[pygame.K_KP9]:
-        angle = 45
+        d_pad_number = 1 << 1
     if keys[pygame.K_KP8]:
-        angle = 90
+        d_pad_number = 1 << 2
     if keys[pygame.K_KP7]:
-        angle = 135
+        d_pad_number = 1 << 3
     if keys[pygame.K_KP4]:
-        angle = 180
+        d_pad_number = 1 << 4
     if keys[pygame.K_KP1]:
-        angle = 225
+        d_pad_number = 1 << 5
     if keys[pygame.K_KP2]:
-        angle = 270
+        d_pad_number = 1 << 6
     if keys[pygame.K_KP3]:
-        angle = 315
+        d_pad_number = 1 << 7
 
-    pygame.draw.circle(screen, PLATINUM if angle is not None else DARK_GRAPHITE, dpad_centroid, 127)
-    pygame.draw.circle(screen, GRAPHITE, dpad_centroid, 125)
-    pygame.draw.aaline(screen, PLATINUM, (dpad_centroid[0], dpad_centroid[1] - 110), (dpad_centroid[0], dpad_centroid[1] + 110))
-    pygame.draw.aaline(screen, PLATINUM, (dpad_centroid[0] - 110, dpad_centroid[1]), (dpad_centroid[0] + 110, dpad_centroid[1]))
-    if angle is not None:
-        dpad_endpoint = (
-            dpad_centroid[0] + math.cos(math.radians(angle)) * 90,
-            dpad_centroid[1] - math.sin(math.radians(angle)) * 90
-        )
-        pygame.draw.circle(screen, PLATINUM, dpad_centroid, 14)
-        pygame.draw.line(screen, PLATINUM, dpad_centroid, dpad_endpoint, 23)
-        pygame.draw.circle(screen, PLATINUM, dpad_endpoint, 22)
-        pygame.draw.circle(screen, BLUE, dpad_centroid, 12)
-        pygame.draw.line(screen, BLUE, dpad_centroid, dpad_endpoint, 19)
-        pygame.draw.circle(screen, BLUE, dpad_endpoint, 20)
+    d_pad_bytes = d_pad_number.to_bytes(1, byteorder='little')
 
-
-    # Analog stick indicators
-    left_stick_pos = (
-        left_stick_box[0] + 0 * left_stick_box[2]//2 + left_stick_box[2]//2,
-        left_stick_box[1] + 0 * left_stick_box[3]//2 + left_stick_box[3]//2
-    )
-    right_stick_pos = (
-        right_stick_box[0] + 0 * right_stick_box[2]//2 + right_stick_box[2]//2,
-        right_stick_box[1] + 0 * right_stick_box[3]//2 + right_stick_box[3]//2
-    )
+    message_bytes = b"".join([control_message_number_bytes, button_bytes, d_pad_bytes])
     
-    pygame.draw.circle(screen, PLATINUM, left_stick_pos, 17 if keys[pygame.K_4] else 12)
-    pygame.draw.circle(screen, BLUE if keys[pygame.K_4] else GRAPHITE, left_stick_pos, 15 if keys[pygame.K_4] else 10)
-    pygame.draw.circle(screen, PLATINUM, right_stick_pos, 17 if keys[pygame.K_7] else 12)
-    pygame.draw.circle(screen, RED if keys[pygame.K_7] else GRAPHITE, right_stick_pos, 15 if keys[pygame.K_7] else 10)
+    print(f"{int.from_bytes(message_bytes, byteorder='little'):056b}")
 
-    ybl_rect.center = yb_box.center
-    bbl_rect.center = bb_box.center
-    abl_rect.center = ab_box.center
-    xbl_rect.center = xb_box.center
+    _message_number += 1
 
-    screen.blit(yb_label, ybl_rect)
-    screen.blit(bb_label, bbl_rect)
-    screen.blit(ab_label, abl_rect)
-    screen.blit(xb_label, xbl_rect)
+def main():
+    parser = argparse.ArgumentParser(
+        prog='Robot Controller',
+        description='Allows you to control an ESP32 robot over Wi-Fi.'
+    )
 
-    lbl_rect.center = left_bumper_box.center
-    rbl_rect.center = right_bumper_box.center
-    ltl_rect.center = left_trigger_box.center
-    rtl_rect.center = right_trigger_box.center
+    parser.add_argument('-f', '--fps-limit', action='store', default=60, type=int)
 
-    screen.blit(lb_label, lbl_rect)
-    screen.blit(rb_label, rbl_rect)
-    screen.blit(lt_label, ltl_rect)
-    screen.blit(rt_label, rtl_rect)
+    args = parser.parse_args()
+    print(f"Framerate will be capped to {args.fps_limit} FPS.")
 
-    bl_rect.center = back_box.center
-    sl_rect.center = start_box.center
+    pygame.init()
+    label_font = pygame.font.SysFont('lucidaconsole', 12)
+    button_font = pygame.font.SysFont('lucidaconsole', 32)
 
-    screen.blit(back_label, bl_rect)
-    screen.blit(start_label, sl_rect)
+    width, height = 1000, 1000
+    screen = pygame.display.set_mode(size=(width, height), flags=pygame.SCALED | pygame.RESIZABLE)
+    pygame.display.set_caption("Cornell College Engineering Club Robot Controller")
 
-    status = "Connecting to your robot..." if pygame.key.get_focused() else "Click this window to control your robot!"
+    clock = pygame.time.Clock()
 
-    status_label = button_font.render(status, True, PLATINUM)
-    status_rect = status_label.get_rect()
-    status_rect.center = (width//2, 35)
-    screen.blit(status_label, status_rect)
 
-    clock.tick(args.fps_limit)
+    DARK_GRAPHITE = (25, 23, 24)
+    GRAPHITE = (61, 59, 60)
+    BLUE = (64, 64, 255)
+    PLATINUM = (235, 235, 235)
+    RED = (255, 64, 64)
 
-    for event in pygame.event.get():
-        if event.type==pygame.QUIT:
-            pygame.quit()
-            sys.exit()
-    pygame.display.flip()
+    yb_label = button_font.render('Y', True, PLATINUM)
+    bb_label = button_font.render('B', True, PLATINUM)
+    ab_label = button_font.render('A', True, PLATINUM)
+    xb_label = button_font.render('X', True, PLATINUM)
+
+    ybl_rect = yb_label.get_rect()
+    bbl_rect = bb_label.get_rect()
+    abl_rect = ab_label.get_rect()
+    xbl_rect = xb_label.get_rect()
+
+    lb_label = button_font.render('LB', True, PLATINUM)
+    rb_label = button_font.render('RB', True, PLATINUM)
+    lt_label = button_font.render('LT', True, PLATINUM)
+    rt_label = button_font.render('RT', True, PLATINUM)
+
+    lbl_rect = lb_label.get_rect()
+    rbl_rect = rb_label.get_rect()
+    ltl_rect = lt_label.get_rect()
+    rtl_rect = rt_label.get_rect()
+
+    back_label = button_font.render("BACK", True, PLATINUM)
+    start_label = button_font.render("START", True, PLATINUM)
+    bl_rect = back_label.get_rect()
+    sl_rect = start_label.get_rect()
+
+    while True:
+        screen.fill(DARK_GRAPHITE)
+
+        # Read current input state
+        keys = pygame.key.get_pressed()
+        pack_message(keys)
+
+        # Analog stick boxes
+        left_stick_box = pygame.draw.rect(screen, GRAPHITE, (175, 100, 300, 300))
+        right_stick_box = pygame.draw.rect(screen, GRAPHITE, (width//2 + 25, 100, 300, 300))
+
+        pygame.draw.aaline(screen, PLATINUM, (175 + 300/2, 100), (175 + 300/2, 100 + 300))
+        pygame.draw.aaline(screen, PLATINUM, (175, 100 + 300/2), (175 + 300, 100 + 300/2))
+
+        pygame.draw.aaline(screen, PLATINUM, (width//2 + 25 + 300/2, 100), (width//2 + 25 + 300/2, 100 + 300))
+        pygame.draw.aaline(screen, PLATINUM, (width//2 + 25, 100 + 300/2), (width//2 + 25 + 300, 100 + 300/2))
+
+        la_label = label_font.render("Left Analog Stick", True, PLATINUM)
+        la_label_rect = la_label.get_rect()
+        la_label_rect.center = (left_stick_box[0] + left_stick_box[2]//2, 90)
+        screen.blit(la_label, la_label_rect)
+
+        ra_label = label_font.render("Right Analog Stick", True, PLATINUM)
+        ra_label_rect = ra_label.get_rect()
+        ra_label_rect.center = (right_stick_box[0] + right_stick_box[2]//2, 90)
+        screen.blit(ra_label, ra_label_rect)
+
+        # Triggers
+        pygame.draw.rect(screen, PLATINUM if keys[pygame.K_2] else DARK_GRAPHITE, (48, 198, 104, 204))
+        pygame.draw.rect(screen, PLATINUM if keys[pygame.K_9] else DARK_GRAPHITE, (width-50-102, 198, 104, 204))
+        left_trigger_box = pygame.draw.rect(screen, BLUE if keys[pygame.K_2] else GRAPHITE, (50, 200, 100, 200))
+        right_trigger_box = pygame.draw.rect(screen, RED if keys[pygame.K_9] else GRAPHITE, (width-50-100, 200, 100, 200))
+
+        # Bumpers
+        pygame.draw.rect(screen, PLATINUM if keys[pygame.K_1] else DARK_GRAPHITE, (48, 98, 104, 79))
+        pygame.draw.rect(screen, PLATINUM if keys[pygame.K_0] else DARK_GRAPHITE, (width-50-102, 98, 104, 79))
+        left_bumper_box = pygame.draw.rect(screen, BLUE if keys[pygame.K_1] else GRAPHITE, (50, 100, 100, 75))
+        right_bumper_box = pygame.draw.rect(screen, RED if keys[pygame.K_0] else GRAPHITE, (width-50-100, 100, 100, 75))
+
+        # Start and Back
+
+        pygame.draw.rect(screen, PLATINUM if keys[pygame.K_3] else DARK_GRAPHITE, (48, 200 + 200 + 23, 104, 79))
+        pygame.draw.rect(screen, PLATINUM if keys[pygame.K_8] else DARK_GRAPHITE, (width-50-102, 200 + 200 + 23, 104, 79))
+        back_box = pygame.draw.rect(screen, BLUE if keys[pygame.K_3] else GRAPHITE, (50, 200 + 200 + 25, 100, 75))
+        start_box = pygame.draw.rect(screen, RED if keys[pygame.K_8] else GRAPHITE, (width-50-100, 200 + 200 + 25, 100, 75))
+
+        # Buttons
+        buttons_centroid = (
+            right_stick_box[0] + right_stick_box[2]//2,
+            right_stick_box[1] + right_stick_box[3] + 50 + 100
+        )
+
+        pygame.draw.circle(screen, PLATINUM if keys[pygame.K_UP] else DARK_GRAPHITE, (buttons_centroid[0], buttons_centroid[1]-75), 42)
+        pygame.draw.circle(screen, PLATINUM if keys[pygame.K_DOWN] else DARK_GRAPHITE, (buttons_centroid[0], buttons_centroid[1]+75), 42)
+        pygame.draw.circle(screen, PLATINUM if keys[pygame.K_LEFT] else DARK_GRAPHITE, (buttons_centroid[0]-75, buttons_centroid[1]), 42)
+        pygame.draw.circle(screen, PLATINUM if keys[pygame.K_RIGHT] else DARK_GRAPHITE, (buttons_centroid[0]+75, buttons_centroid[1]), 42)
+
+        yb_box = pygame.draw.circle(screen, RED if keys[pygame.K_UP] else GRAPHITE, (buttons_centroid[0], buttons_centroid[1]-75), 40)
+        ab_box = pygame.draw.circle(screen, RED if keys[pygame.K_DOWN] else GRAPHITE, (buttons_centroid[0], buttons_centroid[1]+75), 40)
+        xb_box = pygame.draw.circle(screen, RED if keys[pygame.K_LEFT] else GRAPHITE, (buttons_centroid[0]-75, buttons_centroid[1]), 40)
+        bb_box = pygame.draw.circle(screen, RED if keys[pygame.K_RIGHT] else GRAPHITE, (buttons_centroid[0]+75, buttons_centroid[1]), 40)
+
+        # D-pad
+        dpad_centroid = (
+            left_stick_box[0] + left_stick_box[2]//2,
+            left_stick_box[1] + left_stick_box[3] + 50 + 100
+        )
+
+        angle = None
+        if keys[pygame.K_KP6]:
+            angle = 0
+        if keys[pygame.K_KP9]:
+            angle = 45
+        if keys[pygame.K_KP8]:
+            angle = 90
+        if keys[pygame.K_KP7]:
+            angle = 135
+        if keys[pygame.K_KP4]:
+            angle = 180
+        if keys[pygame.K_KP1]:
+            angle = 225
+        if keys[pygame.K_KP2]:
+            angle = 270
+        if keys[pygame.K_KP3]:
+            angle = 315
+
+        pygame.draw.circle(screen, PLATINUM if angle is not None else DARK_GRAPHITE, dpad_centroid, 127)
+        pygame.draw.circle(screen, GRAPHITE, dpad_centroid, 125)
+        pygame.draw.aaline(screen, PLATINUM, (dpad_centroid[0], dpad_centroid[1] - 110), (dpad_centroid[0], dpad_centroid[1] + 110))
+        pygame.draw.aaline(screen, PLATINUM, (dpad_centroid[0] - 110, dpad_centroid[1]), (dpad_centroid[0] + 110, dpad_centroid[1]))
+        if angle is not None:
+            dpad_endpoint = (
+                dpad_centroid[0] + math.cos(math.radians(angle)) * 90,
+                dpad_centroid[1] - math.sin(math.radians(angle)) * 90
+            )
+            pygame.draw.circle(screen, PLATINUM, dpad_centroid, 14)
+            pygame.draw.line(screen, PLATINUM, dpad_centroid, dpad_endpoint, 23)
+            pygame.draw.circle(screen, PLATINUM, dpad_endpoint, 22)
+            pygame.draw.circle(screen, BLUE, dpad_centroid, 12)
+            pygame.draw.line(screen, BLUE, dpad_centroid, dpad_endpoint, 19)
+            pygame.draw.circle(screen, BLUE, dpad_endpoint, 20)
+
+
+        # Analog stick indicators
+        left_stick_pos = (
+            left_stick_box[0] + 0 * left_stick_box[2]//2 + left_stick_box[2]//2,
+            left_stick_box[1] + 0 * left_stick_box[3]//2 + left_stick_box[3]//2
+        )
+        right_stick_pos = (
+            right_stick_box[0] + 0 * right_stick_box[2]//2 + right_stick_box[2]//2,
+            right_stick_box[1] + 0 * right_stick_box[3]//2 + right_stick_box[3]//2
+        )
+
+        pygame.draw.circle(screen, PLATINUM, left_stick_pos, 17 if keys[pygame.K_4] else 12)
+        pygame.draw.circle(screen, BLUE if keys[pygame.K_4] else GRAPHITE, left_stick_pos, 15 if keys[pygame.K_4] else 10)
+        pygame.draw.circle(screen, PLATINUM, right_stick_pos, 17 if keys[pygame.K_7] else 12)
+        pygame.draw.circle(screen, RED if keys[pygame.K_7] else GRAPHITE, right_stick_pos, 15 if keys[pygame.K_7] else 10)
+
+        ybl_rect.center = yb_box.center
+        bbl_rect.center = bb_box.center
+        abl_rect.center = ab_box.center
+        xbl_rect.center = xb_box.center
+
+        screen.blit(yb_label, ybl_rect)
+        screen.blit(bb_label, bbl_rect)
+        screen.blit(ab_label, abl_rect)
+        screen.blit(xb_label, xbl_rect)
+
+        lbl_rect.center = left_bumper_box.center
+        rbl_rect.center = right_bumper_box.center
+        ltl_rect.center = left_trigger_box.center
+        rtl_rect.center = right_trigger_box.center
+
+        screen.blit(lb_label, lbl_rect)
+        screen.blit(rb_label, rbl_rect)
+        screen.blit(lt_label, ltl_rect)
+        screen.blit(rt_label, rtl_rect)
+
+        bl_rect.center = back_box.center
+        sl_rect.center = start_box.center
+
+        screen.blit(back_label, bl_rect)
+        screen.blit(start_label, sl_rect)
+
+        status = "Connecting to your robot..." if pygame.key.get_focused() else "Click this window to control your robot!"
+
+        status_label = button_font.render(status, True, PLATINUM)
+        status_rect = status_label.get_rect()
+        status_rect.center = (width//2, 35)
+        screen.blit(status_label, status_rect)
+
+        clock.tick(args.fps_limit)
+
+        for event in pygame.event.get():
+            if event.type==pygame.QUIT:
+                pygame.quit()
+                sys.exit()
+        pygame.display.flip()
+
+if __name__ == '__main__':
+    main()
