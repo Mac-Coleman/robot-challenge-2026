@@ -3,6 +3,7 @@
 
 #include "Arduino.h"
 #include "WiFi.h"
+#include "WiFiUDP.h"
 
 class Receiver
 {
@@ -32,6 +33,7 @@ class Receiver
     const char* _robot_name;
     const char* _robot_password;
     WiFiServer _server;
+    WiFiUDP _udpSocket;
     float _leftStickX;
     float _leftStickY;
     float _rightStickX;

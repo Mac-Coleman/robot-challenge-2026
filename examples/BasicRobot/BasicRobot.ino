@@ -9,15 +9,29 @@ Receiver receiver("My Robot", "12345678");
 
 void setup()
 {
-    Serial.begin(9600);
+    Serial.begin(115200);
+
+    pinMode(5, OUTPUT);
+    pinMode(6, OUTPUT);
+    pinMode(7, OUTPUT);
+    pinMode(15, OUTPUT);
+    pinMode(16, OUTPUT);
+    digitalWrite(5, HIGH);
+    digitalWrite(6, HIGH);
+    digitalWrite(7, HIGH);
+    digitalWrite(15, HIGH);
+    digitalWrite(16, HIGH);
+
+    Serial.println("Starting robot.");
 
     //This will start the receiver.
     //When the receiver starts, your robot will create a Wi-Fi network with the name of the robot you provided.
     //Use the robot password specified earlier to connect to the network.
     bool ret = receiver.begin();
     if (!ret) {
-        Serial.print("There was an error configuring the Wi-Fi Access Point.");
-        return;
+        log_e("There was an error configuring the Wi-Fi Access Point.");
+        log_e("Error code: %d", ret);
+        while (1);
     }
 
     Serial.print("Your robot '");
@@ -35,6 +49,8 @@ void loop()
 {
     //This will make sure that the gamepad values are as up-to-date as possible.
     //You should call this at the beginning of your loop()!
+    delay(100);
+    return;
     receiver.receive();
 
     if (!receiver.getAlive()) 
