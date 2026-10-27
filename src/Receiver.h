@@ -32,7 +32,6 @@ class Receiver
     void _acknowledge(int message);
     const char* _robot_name;
     const char* _robot_password;
-    WiFiServer _server;
     WiFiUDP _udpSocket;
     float _leftStickX;
     float _leftStickY;

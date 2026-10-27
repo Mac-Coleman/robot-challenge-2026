@@ -8,6 +8,7 @@
 #include "WiFi.h"
 #include "WiFiUDP.h"
 #include "Receiver.h"
+#include "base64.hpp"
 
 Receiver::Receiver(const char* robot_name, const char* robot_password)
 {
@@ -27,7 +28,6 @@ Receiver::Receiver(const char* robot_name, const char* robot_password)
   _triggerRight = false;
   _alive = false;
   _lastReceive = 0;
-  WiFiServer _server(80);
   WiFiUDP _udpSocket;
 }
 
@@ -78,8 +78,8 @@ void Receiver::receive()
     return;
   }
 
-  char readbuffer[256];
-  char writebuffer[256];
+  unsigned char readbuffer[256];
+  unsigned char writebuffer[256];
 
   IPAddress remote = _udpSocket.remoteIP();
   int port = _udpSocket.remotePort();
@@ -89,6 +89,12 @@ void Receiver::receive()
   readbuffer[read_len] = 0; //Add null terminator.
   log_i("Packet content: '%s'", readbuffer);
 
+  unsigned char decoded_buffer[256];
+  unsigned int decoded_length = decode_base64(readbuffer, decoded_buffer);
+  if (decoded_length < 256) {
+    decoded_buffer[decoded_length] = '\0';
+  };
+  log_i("Decoded content: '%s'",(char *) decoded_buffer);
 }
 
 bool Receiver::getAlive()

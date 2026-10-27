@@ -50,7 +50,6 @@ void loop()
     //This will make sure that the gamepad values are as up-to-date as possible.
     //You should call this at the beginning of your loop()!
     delay(100);
-    return;
     receiver.receive();
 
     if (!receiver.getAlive()) 
