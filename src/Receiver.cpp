@@ -22,6 +22,8 @@ typedef struct __attribute__((__packed__)) {
   float_t left_stick_y;
 } GamepadMessage;
 
+bool validateGamepadMessage(GamepadMessage *message);
+
 Receiver::Receiver(const char* robot_name, const char* robot_password)
 {
   _robot_name = robot_name;
@@ -118,9 +120,77 @@ void Receiver::receive()
 
   log_i("#, Gamepad left trigger: %d, %f", gamepad.control_number, gamepad.left_trigger);
 
+  if (!validateGamepadMessage(&gamepad)) {
+    log_e("Gamepad message failed validation.");
+    return;
+  }
+
+  log_d("Gamepad message passed validation.");
+
+  _leftStickX = gamepad.left_stick_x;
+  _leftStickY = gamepad.left_stick_y;
+  _rightStickX = gamepad.right_stick_x;
+  _rightStickY = gamepad.right_stick_y;
+  _triggerLeft = gamepad.left_trigger;
+  _triggerRight = gamepad.right_trigger;
+
+  log_i("lx %f ly %f rx %f ry %f", _leftStickX, _leftStickY, _rightStickX, _rightStickY);
+
 }
 
 bool Receiver::getAlive()
 {
   return _alive;
 }
+
+bool validateGamepadMessage(GamepadMessage *message)
+{
+  if (isnan(message->right_trigger) or isinf(message->right_trigger) or message->right_trigger < -1.0f or message->right_trigger > 1.0f)
+  {
+    log_e("Message right_trigger value invalid: %f", message->right_trigger);
+    return false;
+  };
+
+  if (isnan(message->left_trigger) or isinf(message->left_trigger) or message->left_trigger < -1.0f or message->left_trigger > 1.0f)
+  {
+    log_e("Message left_trigger value invalid: %f", message->left_trigger);
+    return false;
+  };
+
+  if (isnan(message->right_stick_x) or isinf(message->right_stick_x) or message->right_stick_x < -1.0f or message->right_stick_x > 1.0f)
+  {
+    log_e("Message right_stick_x value invalid: %f", message->right_stick_x);
+    return false;
+  };
+
+  if (isnan(message->right_stick_y) or isinf(message->right_stick_y) or message->right_stick_y < -1.0f or message->right_stick_y > 1.0f)
+  {
+    log_e("Message right_stick_y value invalid: %f", message->right_stick_y);
+    return false;
+  };
+
+  if (isnan(message->left_stick_x) or isinf(message->left_stick_x) or message->left_stick_x < -1.0f or message->left_stick_x > 1.0f)
+  {
+    log_e("Message left_stick_x value invalid: %f", message->left_stick_x);
+    return false;
+  };
+
+  if (isnan(message->left_stick_y) or isinf(message->left_stick_y) or message->left_stick_y < -1.0f or message->left_stick_y > 1.0f)
+  {
+    log_e("Message left_stick_y value invalid: %f", message->left_stick_y);
+    return false;
+  };
+
+  uint16_t mask = 0b111111 << 9;
+  if (mask & message->button_field != 0) {
+    log_e("Message button_field bits overlap with reserved bits: %016b", message->button_field);
+    return false;
+  }
+
+  if (__builtin_popcount(message->dpad) > 1) {
+    log_e("Message dpad has more than a single 1 bit: %08b", message->dpad);
+    return false;
+  };
+
+  return true;
+};
