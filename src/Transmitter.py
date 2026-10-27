@@ -104,6 +104,7 @@ def pack_message(keys): #When we get controllers, this should not be based on ke
     print(base64.b64encode(message_bytes))
 
     _message_number += 1
+    _message_number %= 2**(4*8)
 
 def main():
     parser = argparse.ArgumentParser(
