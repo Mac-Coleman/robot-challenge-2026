@@ -61,6 +61,7 @@ void loop()
         //Write your robot's "safe mode" here!
         //Define the actions that your robot should take if the connection with the controller is lost.
         //For example: set motor speeds to zero, or set servos to a specific state.
+        analogWrite(16, (millis() / 255) % 2 == 0 ? millis() % 255 : 255 - millis() % 255);
         return;
     }
 
