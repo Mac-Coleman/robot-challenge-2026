@@ -1,4 +1,7 @@
 import pygame, sys, math, argparse, struct, base64, socket
+from dataclasses import dataclass
+from enum import IntEnum
+from typing import Union
 
 # Really, really bad controller visualizer to assist in using the robots.
 
@@ -21,7 +24,7 @@ import pygame, sys, math, argparse, struct, base64, socket
 #     - Y
 #     - Right Stick
 #     - Left Stick
-#     - Reserved
+#     - Guide button
 #     - Reserved
 #     - Reserved
 #     - Reserved
@@ -48,6 +51,111 @@ _message_number = 0
 
 ROBOT_IP_ADDRESS = "192.168.4.1"
 ROBOT_PORT = 1853
+
+class Direction(IntEnum):
+    NONE      = 0
+    EAST      = 1
+    NORTHEAST = 1 << 1
+    NORTH     = 1 << 2
+    NORTHWEST = 1 << 3
+    WEST      = 1 << 4
+    SOUTHWEST = 1 << 5
+    SOUTH     = 1 << 6
+    SOUTHEAST = 1 << 7
+
+
+@dataclass
+class GamepadState:
+    """Class for storing the current state of the selected gamepad."""
+    connected: bool
+    left_stick_x: float      # Axis 0
+    left_stick_y: float      # Axis 1
+    right_stick_x: float     # Axis 3
+    right_stick_y: float     # Axis 4
+    left_trigger: float      # Axis 2
+    right_trigger: float     # Axis 5
+    d_pad: Direction         # 
+    right_bumper: bool       # Button 5
+    left_bumper: bool        # Button 4
+    start_button: bool       # Button 7
+    back_button: bool        # Button 6
+    a_button: bool           # Button 0
+    b_button: bool           # Button 1
+    x_button: bool           # Button 2
+    y_button: bool           # Button 3
+    right_stick_button: bool # Button 9
+    left_stick_button: bool  # Button 8
+    guide_button: bool       # Button 10
+
+def read_gamepad(joystick: Union[pygame.joystick.Joystick, None]) -> GamepadState:
+    g = GamepadState()
+    if pygame.joystick.Joystick is not None:
+        g.connected = True
+        g.left_stick_x = joystick.get_axis(0)
+        g.left_stick_y = joystick.get_axis(1)
+        g.right_stick_x = joystick.get_axis(3)
+        g.right_stick_y = joystick.get_axis(4)
+        g.left_trigger = joystick.get_axis(2)
+        g.right_trigger = joystick.get_axis(5)
+
+        g.right_bumper = joystick.get_button(5)
+        g.left_bumper = joystick.get_button(4)
+        g.start_button = joystick.get_button(7)
+        g.back_button = joystick.get_button(6)
+        g.a_button = joystick.get_button(0)
+        g.b_button = joystick.get_button(1)
+        g.x_button = joystick.get_button(2)
+        g.y_button = joystick.get_button(3)
+        g.right_stick_button = joystick.get_button(9)
+        g.left_stick_button = joystick.get_button(8)
+        g.guide_button = joystick.get_button(10)
+
+        # Still need to handle d_pad.
+        return g
+
+    keys = pygame.key.get_pressed()
+    g.connected = False
+    g.left_stick_x = 1.0 if keys[pygame.K_d] else -1.0 if keys[pygame.K_a] else 0.0
+    g.left_stick_y = 1.0 if keys[pygame.K_s] else -1.0 if keys[pygame.K_w] else 0.0
+    g.right_stick_x = 1.0 if keys[pygame.K_l] else -1.0 if keys[pygame.K_j] else 0.0
+    g.right_stick_y = 1.0 if keys[pygame.K_k] else -1.0 if keys[pygame.K_i] else 0.0
+    g.left_trigger = 1.0 if keys[pygame.K_2] else 0.0
+    g.right_trigger = 1.0 if keys[pygame.K_9] else 0.0
+
+    g.right_bumper = keys[pygame.K_0]
+    g.left_bumper = keys[pygame.K_1]
+    g.start_button = keys[pygame.K_8]
+    g.back_button = keys[pygame.K_3]
+    g.a_button = keys[pygame.K_DOWN]
+    g.b_button = keys[pygame.K_RIGHT]
+    g.x_button = keys[pygame.K_LEFT]
+    g.y_button = keys[pygame.K_UP]
+    g.right_stick_button = keys[pygame.K_7]
+    g.left_stick_button = keys[pygame.K_4]
+    g.guide_button = keys[pygame.K_SPACE]
+
+    d_pad_number = Direction.NONE
+    if keys[pygame.K_KP6]:
+        d_pad_number = Direction.EAST
+    if keys[pygame.K_KP9]:
+        d_pad_number = Direction.NORTHEAST
+    if keys[pygame.K_KP8]:
+        d_pad_number = Direction.NORTH
+    if keys[pygame.K_KP7]:
+        d_pad_number = Direction.NORTHWEST
+    if keys[pygame.K_KP4]:
+        d_pad_number = Direction.WEST
+    if keys[pygame.K_KP1]:
+        d_pad_number = Direction.SOUTHWEST
+    if keys[pygame.K_KP2]:
+        d_pad_number = Direction.SOUTH
+    if keys[pygame.K_KP3]:
+        d_pad_number = Direction.SOUTHEAST
+
+    g.d_pad = d_pad_number
+    return g
+
+
 
 def pack_message(sock, keys): #When we get controllers, this should not be based on keys, this is just for testing.
     global _message_number
