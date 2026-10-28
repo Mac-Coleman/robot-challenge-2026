@@ -166,6 +166,8 @@ void Receiver::receive()
   _buttonStickLeft  = (gamepad.button_field & left_stick_mask) != 0;
   _buttonStickRight = (gamepad.button_field & right_stick_mask) != 0;
 
+  _lastReceive = millis();
+
   log_i("a %d b %d x %d y %d", _buttonA, _buttonB, _buttonX, _buttonY);
 
 
@@ -175,7 +177,7 @@ void Receiver::receive()
 
 bool Receiver::getAlive()
 {
-  return _alive;
+  return millis() - _lastReceive < 100; //If the robot doesn't receive a packet for 100 ms, it considers the connection dead.
 }
 
 bool Receiver::buttonA()

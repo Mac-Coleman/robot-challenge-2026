@@ -51,21 +51,27 @@ void loop()
     //You should call this at the beginning of your loop()!
     receiver.receive();
 
-    digitalWrite(5, !receiver.buttonY());
-    digitalWrite(6, !receiver.buttonX());
-    digitalWrite(7, !receiver.buttonB());
-    digitalWrite(15, !receiver.buttonA());
-
     if (!receiver.getAlive()) 
     {
         //Write your robot's "safe mode" here!
         //Define the actions that your robot should take if the connection with the controller is lost.
         //For example: set motor speeds to zero, or set servos to a specific state.
-        analogWrite(16, (millis() / 255) % 2 == 0 ? millis() % 255 : 255 - millis() % 255);
+        analogWrite(5, (millis() / 255) % 2 == 0 ? millis() % 255 : 255 - millis() % 255);
         return;
     }
 
     //Write the controls for your robot here!
     //The code here will only run if the connection with the controller is good.
 
+    pinMode(5, OUTPUT);
+    pinMode(6, OUTPUT);
+    pinMode(7, OUTPUT);
+    pinMode(15, OUTPUT);
+    pinMode(16, OUTPUT);
+
+    digitalWrite(5, !receiver.buttonY());
+    digitalWrite(6, !receiver.buttonX());
+    digitalWrite(7, !receiver.buttonB());
+    digitalWrite(15, !receiver.buttonA());
+    digitalWrite(16, (millis() % 1000) >= 5);
 }
