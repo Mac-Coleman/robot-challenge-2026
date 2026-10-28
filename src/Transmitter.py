@@ -119,8 +119,8 @@ def read_gamepad(joystick: Union[pygame.joystick.Joystick, None]) -> GamepadStat
     g.left_stick_y = 1.0 if keys[pygame.K_s] else -1.0 if keys[pygame.K_w] else 0.0
     g.right_stick_x = 1.0 if keys[pygame.K_l] else -1.0 if keys[pygame.K_j] else 0.0
     g.right_stick_y = 1.0 if keys[pygame.K_k] else -1.0 if keys[pygame.K_i] else 0.0
-    g.left_trigger = 0.5 if keys[pygame.K_2] else 0.0
-    g.right_trigger = 0.75 if keys[pygame.K_9] else 0.0
+    g.left_trigger = 1.0 if keys[pygame.K_2] else 0.0
+    g.right_trigger = 1.0 if keys[pygame.K_9] else 0.0
 
     g.right_bumper = keys[pygame.K_0]
     g.left_bumper = keys[pygame.K_1]
