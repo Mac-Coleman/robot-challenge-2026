@@ -433,8 +433,10 @@ def main():
 
     parser.add_argument('-f', '--fps-limit', action='store', default=60, type=int, help="The maximum framerate to display in FPS. You can lower this if your monitor has a lower refresh rate.")
     parser.add_argument('-c', '--control-hz', action='store', default=60, type=int, help="Frequency at which packets are sent to the robot in Hz.")
+    parser.add_argument('-d', '--dummy-mode', action='store_true', help="Prevents the program from issuing control commands to the robot.")
 
     args = parser.parse_args()
+    print(f"Launching in {"dummy" if args.dummy_mode else "control"} mode.")
     print(f"Framerate will be capped to {args.fps_limit} FPS.")
     print(f"Robot control message rate is {args.control_hz} Hz.")
 
@@ -444,10 +446,12 @@ def main():
     keep_alive = threading.Event()
     keep_alive.set()
     ct = threading.Thread(target=control_thread, args=(q, args.control_hz, keep_alive), daemon=True)
-    ct.start()
+    if not args.dummy_mode:
+        ct.start()
     display_thread(q, args.fps_limit)
     keep_alive.clear()
-    ct.join()
+    if not args.dummy_mode:
+        ct.join()
     pygame.quit()
     sys.exit()
 
