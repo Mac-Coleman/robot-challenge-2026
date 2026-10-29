@@ -213,7 +213,23 @@ def display_thread(control_input_queue: queue.Queue, display_hz: int):
 
     clock = pygame.time.Clock()
 
-    gamepad = GamepadState()
+    joystick = None
+
+    pygame.joystick.init()
+
+    joysticks = [pygame.joystick.Joystick(x) for x in range(pygame.joystick.get_count())]
+    if len(joysticks) == 1:
+        joystick = joysticks[0]
+        print(f"Joystick detected:\t{joystick.get_guid()}\t{joystick.get_name()}")
+    elif len(joysticks) > 1:
+        print(f"Multiple joysticks detected!:")
+        for i in range(len(joysticks)):
+            print(f"{i}:\t{joysticks[i].get_guid()}\t{joysticks[i].get_name()}")
+        print("Choosing joystick 0 (I am too lazy to think more about this right now):")
+        joystick = joysticks[0]
+        print(f"Joystick detected:\t{joystick.get_guid()}\t{joystick.get_name()}")
+    else:
+        print("No joystick detected, falling back to keyboard.")
 
     label_font = pygame.font.SysFont('lucidaconsole', 12)
     button_font = pygame.font.SysFont('lucidaconsole', 32)
