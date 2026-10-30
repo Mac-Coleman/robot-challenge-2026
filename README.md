@@ -65,7 +65,8 @@ if (receiver.buttonY())
 else
 {
     digitalWrite(LED_PIN, LOW);
-}```
+}
+```
 
 Or, in even simpler terms:
 
