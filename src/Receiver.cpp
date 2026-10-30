@@ -139,8 +139,6 @@ void Receiver::receive()
   GamepadMessage gamepad;
   memcpy(&gamepad, decoded_buffer, sizeof(GamepadMessage));
 
-  //log_i("#, Gamepad left trigger: %d, %f", gamepad.control_number, gamepad.left_trigger);
-
   if (!validateGamepadMessage(&gamepad)) {
     log_e("Gamepad message failed validation.");
     return;
@@ -167,12 +165,6 @@ void Receiver::receive()
   _buttonStickRight = (gamepad.button_field & right_stick_mask) != 0;
 
   _lastReceive = millis();
-
-  log_i("a %d b %d x %d y %d", _buttonA, _buttonB, _buttonX, _buttonY);
-
-
-  //log_i("lx %f ly %f rx %f ry %f", _leftStickX, _leftStickY, _rightStickX, _rightStickY);
-
 }
 
 bool Receiver::getAlive()
