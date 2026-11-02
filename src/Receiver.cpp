@@ -53,14 +53,15 @@ Receiver::Receiver(const char* robot_name, const char* robot_password)
   _leftStickY = 0.0f;
   _rightStickX = 0.0f;
   _rightStickY = 0.0f;
+  _triggerLeft = 0.0f;
+  _triggerRight = 0.0f;
   _buttonY = false;
   _buttonB = false;
   _buttonA = false;
   _buttonX = false;
   _bumperLeft = false;
   _bumperRight = false;
-  _triggerLeft = false;
-  _triggerRight = false;
+
   _alive = false;
   _lastReceive = 0;
   WiFiUDP _udpSocket;
@@ -172,6 +173,36 @@ bool Receiver::getAlive()
   return millis() - _lastReceive < 100; //If the robot doesn't receive a packet for 100 ms, it considers the connection dead.
 }
 
+float Receiver::leftStickX()
+{
+  return _leftStickX;
+}
+
+float Receiver::leftStickY()
+{
+  return _leftStickY;
+}
+
+float Receiver::rightStickX()
+{
+  return _rightStickX;
+}
+
+float Receiver::rightStickY()
+{
+  return _rightStickY;
+}
+
+float Receiver::triggerLeft()
+{
+  return _triggerLeft;
+}
+
+float Receiver::triggerRight()
+{
+  return _triggerRight;
+}
+
 bool Receiver::buttonA()
 {
   return _buttonA;
@@ -190,6 +221,31 @@ bool Receiver::buttonX()
 bool Receiver::buttonY()
 {
   return _buttonY;
+}
+
+bool Receiver::buttonStart()
+{
+  return _buttonStart;
+}
+
+bool Receiver::buttonBack()
+{
+  return _buttonBack;
+}
+
+bool Receiver::buttonGuide()
+{
+  return _buttonGuide;
+}
+
+bool Receiver::buttonLeftStick()
+{
+  return _buttonStickLeft;
+}
+
+bool Receiver::buttonRightStick()
+{
+  return _buttonStickRight;
 }
 
 bool validateGamepadMessage(GamepadMessage *message)
