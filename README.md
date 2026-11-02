@@ -30,7 +30,7 @@ if (!wifi_okay) {
 
 Within your `void loop() { ... }` function, call `Receiver::receive()` at the beginning of the function. This will allow you to read the latest values of the connected gamepad.
 
-## Recommended: call `Receiver::getAlive()` to check whether your robot is healthy.
+### Recommended: call `Receiver::getAlive()` to check whether your robot is healthy.
 `Receiver::getAlive()` returns a boolean value to let you know if the robot has received a valid command within the last 100 milliseconds. Use this to test if your robot is still connected to your computer. You don't want your robot to spiral out of control just because the connection was lost!
 Within your `void loop() { ... }` function, test the value of `Receiver::getAlive()` so you can define a "safe state" for your robot. For example: Turn off any motors, apply brakes, set servos to known positions, or turn on/off LEDs.
 
@@ -75,10 +75,23 @@ digitalWrite(LED_PIN, receiver.buttonY());
 ```
 
 #####
+# Arduino Library
+The Arduino library and Arduino IDE is what you will use to write code and program your robot.
+
+## Library Setup
+This entire repository is an Arduino library. To install it, compress the repository into a .zip file.
+Then, in Arduino IDE, go to `Sketch` -> `Include Library` -> `Add .ZIP Library`. Whenever you want to update the library, just do this process again, and agree to overwrite the library if it asks you if you want to.
+
+Adding libraries through the "Add .ZIP Library" option doesn't automatically install dependencies, so you will need to install the `base64` library by Densaugeo. To add it, go to the Library Manager in Arduino IDE on the left hand side. Type `base64` in the search box, and then click `INSTALL` under the entry for `base64 by Densaugeo`.
+
+## Board Setup
+Make sure to select the correct board. Click the board selector in Arduino IDE, then `Select Other Board and Port`. In the `BOARDS` search box, type "XIAO_ESP32C3". Select the listing in the search box, and click `OK`.
+
+#####
 # Controlling your robot with the client
 There is a python client for controlling your robot. I have not written the setup instructions for it yet, but it requires `pygame`.
 ```
-py -m pip install pygame
+$ py -m pip install pygame
 ```
 To use it, connect to the Wi-Fi network created by your robot with the password you specified earlier.
 **Important**: Make sure that there is no other internet connection available on the device you want to control the robot from. If your laptop tries connecting to another Wi-Fi network, you will lose connection to your robot.
@@ -88,8 +101,3 @@ $ py client/Transmitter.py
 ```
 It should display the current state of your joystick on the screen to assist you with debugging.
 I haven't tested it with an actual joystick yet.
-
-#####
-# Arduino Server Library
-This entire repository is an Arduino library. To install it, compress the repository into a .zip file.
-Then, in Arduino IDE, go to `Sketch` -> `Include Library` -> `Add .ZIP Library`. Whenever you want to update the library, just do this process again, and agree to overwrite the library if it asks you if you want to.
