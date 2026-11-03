@@ -9,7 +9,8 @@
  * | The robot's left and right motors are controlled by the left |
  * |   and right joysticks, and the flipper is raised when the A  |
  * |                     button is held.                          |
- */+--------------------------------------------------------------+
+ * +--------------------------------------------------------------+
+ */
 
 #include <Receiver.h>
 
