@@ -2,11 +2,11 @@
 
 :)
 Not at all finished, I'm kind of making stuff up right now.
-This project allows a robot to be programmed in Arduino IDE with C++, but in the future I want to offer a CircuitPython version too so that people can use python to program their robots as well. However, Arduino C++ is really not that bad, and the hard parts have already been taken care of.
+This project allows a robot to be programmed in Arduino IDE with C++, but in the future I want to offer a CircuitPython version as well. However, Arduino C++ is really not that bad, and the hard parts have already been taken care of.
 
 #####
 # Example
-There is an example of a basic Arduino robot created with this project in <./examples/BasicRobot/BasicRobot.ino>.
+There is an example of a basic Arduino robot created with this project in [./examples/BasicRobot/BasicRobot.ino](./examples/BasicRobot/BasicRobot.ino).
 This is not a real robot as I do not have one available, but this would be about as complicated as you would need it to be in order to have a functioning robot controlled by a game controller.
 
 First, you need to create a `Receiver` class. Give your robot a name, and a password. **MAKE SURE THAT THIS PASSWORD IS NOT A PASSWORD YOU USE FOR ANYTHING ELSE.** It only needs to be 8 characters long. When the robot is running, it will create a Wi-Fi network for you to connect to with the name set to your robot's name and the password set to the password you specify here.
@@ -87,8 +87,18 @@ Adding libraries through the "Add .ZIP Library" option doesn't automatically ins
 ## Board Setup
 Make sure to select the correct board. Click the board selector in Arduino IDE, then `Select Other Board and Port`. In the `BOARDS` search box, type "XIAO_ESP32C3". Select the listing in the search box, and click `OK`.
 
+## Programming your robot
+All you have to do now is create a new Arduino sketch with `File` -> `New Sketch`. To use the receiver's functionality in your sketch, simply include `Receiver.h`.
+
+```cpp
+#include <Receiver.h>
+```
+
+Follow the example at [./examples/BasicRobot/BasicRobot.ino](./examples/BasicRobot/BasicRobot.ino) to program your robot.
+
 #####
 # Controlling your robot with the client
+![The robot controller program running, showing some buttons being pressed.](./images/controller.png)
 There is a python client for controlling your robot. I have not written the setup instructions for it yet, but it requires `pygame`.
 ```
 $ py -m pip install pygame
@@ -100,4 +110,15 @@ Then, start the controller client.
 $ py client/Transmitter.py
 ```
 It should display the current state of your joystick on the screen to assist you with debugging.
-I haven't tested it with an actual joystick yet.
+
+**If you are not connected to your robot, use the `--dummy-mode` or `-d` option to avoid sending control packets over whatever network you are connected to:**
+```
+$ py client/Transmitter.py --dummy-mode
+```
+
+By default the client attempts to run at 60 FPS. If you want to change it, you can run it at a higher/lower FPS with `--fps-limit` or `-f`:
+```
+$ py client/Transmitter.py --fps-limit 144
+```
+
+I haven't tested it with an actual joystick yet, right now it falls back to using your keyboard as the input device.
