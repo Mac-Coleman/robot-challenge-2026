@@ -24,7 +24,7 @@
 #define MOTOR_L_REVERSE false
 
 #define MOTOR_R_PIN_1 4
-#define MOTOR_R_PIN_1 5
+#define MOTOR_R_PIN_2 5
 #define MOTOR_R_PWM_CHANNEL 1
 #define MOTOR_R_REVERSE true
 
