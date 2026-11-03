@@ -16,7 +16,7 @@
 
 //Install these from the library manager:
 #include <Cdrv8833.h>
-#include <Servo.h>
+#include <ESP32Servo.h>
 
 #define MOTOR_L_PIN_1 2
 #define MOTOR_L_PIN_2 3
@@ -75,7 +75,7 @@ void setup()
 
     // set the motors to slow decay (high torque) mode.
     motorLeft.setDecayMode(drv8833DecaySlow);
-    motorRight.setDecayMode(drv8833Decayslow);
+    motorRight.setDecayMode(drv8833DecaySlow);
 
     // Set up the flipper servo to the correct pin, and set the angle to zero degrees.
     flipper.attach(SERVO_PIN);
@@ -113,7 +113,7 @@ void loop()
     
     //Set the speeds of each motor to be based on the position of the left and right joysticks.
     //The motors take an integer speed between -100 (full speed backwards) and 100 (full speed forwards).
-    motorLeft.move((int) (100.0f * receiver.leftstickY()));
+    motorLeft.move((int) (100.0f * receiver.leftStickY()));
     motorRight.move((int) (100.0f * receiver.rightStickY()));
 
     //Set the flipper angle. It should be raised (90 degrees) when the A button is pressed.
