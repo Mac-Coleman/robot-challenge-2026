@@ -96,6 +96,10 @@ All you have to do now is create a new Arduino sketch with `File` -> `New Sketch
 
 Follow the example at [./examples/BasicRobot/BasicRobot.ino](./examples/BasicRobot/BasicRobot.ino) to program your robot.
 
+If you use this `Cdrv8833` library, you will have to *downgrade* your board version in order to get it to compile. Go to the board manager in Arduino IDE, set `Type` to "Installed", scroll down until you find `esp32 by Espressif Systems`, choose the version dropdown menu where it says `3.3.XX`, then change it to `2.0.17`, and hit `INSTALL`.
+
+I am looking around for alternatives or patched versions of this library. I might vendor this dependency so you don't have to think about it.
+
 #####
 # Controlling your robot with the client
 ![The robot controller program running, showing some buttons being pressed.](./images/controller.png)
