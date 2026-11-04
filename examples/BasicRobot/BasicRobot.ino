@@ -102,8 +102,8 @@ void loop()
         //Lower the flipper.
         flipper.write(0);
 
-        //Makes the LED flash twice a second.
-        digitalWrite(LED_PIN, (millis() % 250) % 2 == 0);
+        //Turn on the LED to a steady brightness so we know the robot is powered but not connected.
+        digitalWrite(LED_PIN, HIGH);
 
         return;
     }
@@ -111,8 +111,10 @@ void loop()
     //Write the controls for your robot here!
     //The code here will only run if the connection with the controller is good.
 
-    //Turn on the LED to a steady brightness so we know the robot is connected.
-    digitalWrite(LED_PIN, HIGH);
+    
+
+    //Makes the LED flash twice a second so we know the robot is powered and connected.
+    digitalWrite(LED_PIN, (millis() % 250) % 2 == 0);
     
     //Set the speeds of each motor to be based on the position of the left and right joysticks.
     //The motors take an integer speed between -100 (full speed backwards) and 100 (full speed forwards).
