@@ -4,8 +4,8 @@
 Not at all finished, I'm kind of making stuff up right now.
 This project allows a robot to be programmed in Arduino IDE with C++, but in the future I want to offer a CircuitPython version as well. However, Arduino C++ is really not that bad, and the hard parts have already been taken care of.
 
-<details>
 # Arduino Library Installation, Setup, Template, and Examples
+<details>
     <summary>The Arduino library and Arduino IDE is what you will use to write code and program your robot. Click to expand.</summary>
 
 ## Library Setup
