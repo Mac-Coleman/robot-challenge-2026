@@ -15,6 +15,9 @@ You should call this function outside of your `void setup() {...}` function.
 Receiver receiver("My awesome robot", "123456789");
 ```
 
+> [!CAUTION]
+> It is important that your robot password is not a password you use for anything else, because if you want to work on your robots as a group, you will probably want to upload your code to Github. If you do this, your password will be available to anyone on the internet.
+
 Within your setup function, call `Receiver::begin()` to create the Wi-Fi network and begin listening for control commands.
 ```cpp
 bool wifi_okay = receiver.begin();
@@ -30,9 +33,13 @@ if (!wifi_okay) {
 
 Within your `void loop() { ... }` function, call `Receiver::receive()` at the beginning of the function. This will allow you to read the latest values of the connected gamepad.
 
-### Recommended: call `Receiver::getAlive()` to check whether your robot is healthy.
-`Receiver::getAlive()` returns a boolean value to let you know if the robot has received a valid command within the last 100 milliseconds. Use this to test if your robot is still connected to your computer. You don't want your robot to spiral out of control just because the connection was lost!
-Within your `void loop() { ... }` function, test the value of `Receiver::getAlive()` so you can define a "safe state" for your robot. For example: Turn off any motors, apply brakes, set servos to known positions, or turn on/off LEDs.
+> [!IMPORTANT]
+> You should call `Receiver::getAlive()` to check whether your robot is healthy.
+> `Receiver::getAlive()` returns a boolean value to let you know if the robot has received a valid command within the last 100 milliseconds.
+> Use this to test if your robot is still connected to your computer.
+> You don't want your robot to spiral out of control just because the connection was lost!
+> Within your `void loop() { ... }` function, test the value of `Receiver::getAlive()` so you can define a "safe state" for your robot.
+> For example: Turn off any motors, apply brakes, set servos to known positions, or turn on/off LEDs.
 
 ```cpp
 //Guard clause to exit function early if the robot has not received a valid control packet in the last 100 milliseconds.
@@ -94,8 +101,8 @@ All you have to do now is create a new Arduino sketch with `File` -> `New Sketch
 
 Follow the example at [./examples/BasicRobot/BasicRobot.ino](./examples/BasicRobot/BasicRobot.ino) to program your robot.
 
-[!NOTE]
-The [`Cdrv8833`](https://github.com/shurillu/Cdrv8833/tree/main) library available on the Arduino library manager is outdated and won't work with newer versions of the Arduino ESP32 core. I have vendored a [patched version of `Cdrv8833`](https://github.com/fiz1962/Cdrv8833/tree/main). You can include it in your sketches like this: Instead of `#include <Cdrv8833.h>`, do `#include <vendored/Cdrv8833-patched/src/Cdrv8833.h>`.
+> [!NOTE]
+> The [`Cdrv8833`](https://github.com/shurillu/Cdrv8833/tree/main) library available on the Arduino library manager is outdated and won't work with newer versions of the Arduino ESP32 core. I have vendored a [patched version of `Cdrv8833`](https://github.com/fiz1962/Cdrv8833/tree/main). You can include it in your sketches like this: Instead of `#include <Cdrv8833.h>`, do `#include <vendored/Cdrv8833-patched/src/Cdrv8833.h>`.
 
 #####
 # Controlling your robot with the client
@@ -105,20 +112,24 @@ There is a python client for controlling your robot. I have not written the setu
 $ py -m pip install pygame
 ```
 To use it, connect to the Wi-Fi network created by your robot with the password you specified earlier.
-**Important**: Make sure that there is no other internet connection available on the device you want to control the robot from. If your laptop tries connecting to another Wi-Fi network, you will lose connection to your robot.
+
+> [!IMPORTANT]
+> Make sure that there is no other internet connection available on the device you want to control the robot from. If your laptop tries connecting to another Wi-Fi network, you will lose connection to your robot.
+
 Then, start the controller client.
-```
+```bash
 $ py client/Transmitter.py
 ```
 It should display the current state of your joystick on the screen to assist you with debugging.
 
-**If you are not connected to your robot, use the `--dummy-mode` or `-d` option to avoid sending control packets over whatever network you are connected to:**
-```
-$ py client/Transmitter.py --dummy-mode
-```
+> [!CAUTION]
+> If you are not connected to your robot, use the `--dummy-mode` or `-d` option to avoid sending control packets over whatever network you are connected to:
+> ```bash
+> $ py client/Transmitter.py --dummy-mode
+> ```
 
 By default the client attempts to run at 60 FPS. If you want to change it, you can run it at a higher/lower FPS with `--fps-limit` or `-f`:
-```
+```bash
 $ py client/Transmitter.py --fps-limit 144
 ```
 
