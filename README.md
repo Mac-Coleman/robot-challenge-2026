@@ -4,6 +4,34 @@
 Not at all finished, I'm kind of making stuff up right now.
 This project allows a robot to be programmed in Arduino IDE with C++, but in the future I want to offer a CircuitPython version as well. However, Arduino C++ is really not that bad, and the hard parts have already been taken care of.
 
+<details>
+# Arduino Library Installation, Setup, Template, and Examples
+    <summary>The Arduino library and Arduino IDE is what you will use to write code and program your robot. Click to expand.</summary>
+
+## Library Setup
+This entire repository is an Arduino library. To install it, compress the repository into a .zip file.
+Then, in Arduino IDE, go to `Sketch` -> `Include Library` -> `Add .ZIP Library`. Whenever you want to update the library, just do this process again, and agree to overwrite the library if it asks you if you want to.
+
+## Board Setup
+Make sure to select the correct board. Click the board selector in Arduino IDE, then `Select Other Board and Port`. In the `BOARDS` search box, type "XIAO_ESP32C3". Select the listing in the search box, and click `OK`.
+
+## Programming your robot
+All you have to do now is create a new Arduino sketch with `File` -> `New Sketch`. To use the receiver's functionality in your sketch, simply include `Receiver.h`.
+
+```cpp
+#include <Receiver.h>
+```
+
+## Template
+A template that might help you write your robot's code is available at [./examples/Template/Template.ino](./examples/Template/Template.ino).
+You can open this template in Arduino IDE (after you've installed the Arduino Library) by clicking `File` -> `Examples` -> `Receiver` -> `Template`. You can then change this file and save it wherever you like.
+
+For a more thorough example, check the example at [./examples/BasicRobot/BasicRobot.ino](./examples/BasicRobot/BasicRobot.ino) to program your robot, or open it in Arduino IDE via `File` -> `Examples` -> `Receiver` -> `BasicRobot`.
+
+> [!NOTE]
+> The [`Cdrv8833`](https://github.com/shurillu/Cdrv8833/tree/main) library available on the Arduino library manager is outdated and won't work with newer versions of the Arduino ESP32 core. I have vendored a [patched version of `Cdrv8833`](https://github.com/fiz1962/Cdrv8833/tree/main). You can include it in your sketches like this: Instead of `#include <Cdrv8833.h>`, do `#include <vendored/Cdrv8833-patched/src/Cdrv8833.h>`.
+</details>
+
 #####
 # Example
 There is an example of a basic Arduino robot created with this project in [./examples/BasicRobot/BasicRobot.ino](./examples/BasicRobot/BasicRobot.ino).
@@ -78,29 +106,6 @@ Or, in even simpler terms:
 ```cpp
 digitalWrite(LED_PIN, receiver.buttonY());
 ```
-
-#####
-# Arduino Library
-The Arduino library and Arduino IDE is what you will use to write code and program your robot.
-
-## Library Setup
-This entire repository is an Arduino library. To install it, compress the repository into a .zip file.
-Then, in Arduino IDE, go to `Sketch` -> `Include Library` -> `Add .ZIP Library`. Whenever you want to update the library, just do this process again, and agree to overwrite the library if it asks you if you want to.
-
-## Board Setup
-Make sure to select the correct board. Click the board selector in Arduino IDE, then `Select Other Board and Port`. In the `BOARDS` search box, type "XIAO_ESP32C3". Select the listing in the search box, and click `OK`.
-
-## Programming your robot
-All you have to do now is create a new Arduino sketch with `File` -> `New Sketch`. To use the receiver's functionality in your sketch, simply include `Receiver.h`.
-
-```cpp
-#include <Receiver.h>
-```
-
-Follow the example at [./examples/BasicRobot/BasicRobot.ino](./examples/BasicRobot/BasicRobot.ino) to program your robot.
-
-> [!NOTE]
-> The [`Cdrv8833`](https://github.com/shurillu/Cdrv8833/tree/main) library available on the Arduino library manager is outdated and won't work with newer versions of the Arduino ESP32 core. I have vendored a [patched version of `Cdrv8833`](https://github.com/fiz1962/Cdrv8833/tree/main). You can include it in your sketches like this: Instead of `#include <Cdrv8833.h>`, do `#include <vendored/Cdrv8833-patched/src/Cdrv8833.h>`.
 
 #####
 # Controlling your robot with the client
