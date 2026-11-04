@@ -1,3 +1,6 @@
 [submodule "src/vendored/Cdrv8833-patched"]
 	path = src/vendored/Cdrv8833-patched
 	url = https://github.com/fiz1962/Cdrv8833.git
+[submodule "src/vendored/base64_arduino"]
+	path = src/vendored/base64_arduino
+	url = https://github.com/Densaugeo/base64_arduino.git

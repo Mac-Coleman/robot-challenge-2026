@@ -82,8 +82,6 @@ The Arduino library and Arduino IDE is what you will use to write code and progr
 This entire repository is an Arduino library. To install it, compress the repository into a .zip file.
 Then, in Arduino IDE, go to `Sketch` -> `Include Library` -> `Add .ZIP Library`. Whenever you want to update the library, just do this process again, and agree to overwrite the library if it asks you if you want to.
 
-Adding libraries through the "Add .ZIP Library" option doesn't automatically install dependencies, so you will need to install the `base64` library by Densaugeo. To add it, go to the Library Manager in Arduino IDE on the left hand side. Type `base64` in the search box, and then click `INSTALL` under the entry for `base64 by Densaugeo`.
-
 ## Board Setup
 Make sure to select the correct board. Click the board selector in Arduino IDE, then `Select Other Board and Port`. In the `BOARDS` search box, type "XIAO_ESP32C3". Select the listing in the search box, and click `OK`.
 

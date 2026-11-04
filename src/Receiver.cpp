@@ -8,7 +8,7 @@
 #include "WiFi.h"
 #include "WiFiUDP.h"
 #include "Receiver.h"
-#include "base64.hpp"
+#include "vendored/base64_arduino/src/base64.hpp"
 
 const uint16_t right_bumper_mask = 1 << 0;
 const uint16_t left_bumper_mask  = 1 << 1;
