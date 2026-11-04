@@ -168,7 +168,7 @@ void Receiver::receive()
   _lastReceive = millis();
 }
 
-bool Receiver::getAlive()
+bool Receiver::isAlive()
 {
   return millis() - _lastReceive < 100; //If the robot doesn't receive a packet for 100 ms, it considers the connection dead.
 }

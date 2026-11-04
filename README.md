@@ -34,16 +34,16 @@ if (!wifi_okay) {
 Within your `void loop() { ... }` function, call `Receiver::receive()` at the beginning of the function. This will allow you to read the latest values of the connected gamepad.
 
 > [!IMPORTANT]
-> You should call `Receiver::getAlive()` to check whether your robot is healthy.
-> `Receiver::getAlive()` returns a boolean value to let you know if the robot has received a valid command within the last 100 milliseconds.
+> You should call `Receiver::isAlive()` to check whether your robot is healthy.
+> `Receiver::isAlive()` returns a boolean value to let you know if the robot has received a valid command within the last 100 milliseconds.
 > Use this to test if your robot is still connected to your computer.
 > You don't want your robot to spiral out of control just because the connection was lost!
-> Within your `void loop() { ... }` function, test the value of `Receiver::getAlive()` so you can define a "safe state" for your robot.
+> Within your `void loop() { ... }` function, test the value of `Receiver::isAlive()` so you can define a "safe state" for your robot.
 > For example: Turn off any motors, apply brakes, set servos to known positions, or turn on/off LEDs.
 
 ```cpp
 //Guard clause to exit function early if the robot has not received a valid control packet in the last 100 milliseconds.
-if (!receiver.getAlive()) {})
+if (!receiver.isAlive()) {})
 {
     log_i("The robot hasn't received any valid commands for a while.");
     log_i("Now would be a good time to set the robot to a safe state so it doesn't go out of control.");
@@ -53,9 +53,7 @@ if (!receiver.getAlive()) {})
 //We can write the code for our robot when it is healthy right here!
 ```
 
-I will probably rename `Receiver::getAlive()` to something like `Receiver::isAlive()` at some point, I don't know why that didn't occur to me earlier.
-
-After the `Receiver::getAlive()` guard clause, we can write the "healthy" code of our robot here! This is where we should set things like motor speeds, servo positions, and lights. This is also probably where you want to read the state of the gamepad.
+After the `Receiver::isAlive()` guard clause, we can write the "healthy" code of our robot here! This is where we should set things like motor speeds, servo positions, and lights. This is also probably where you want to read the state of the gamepad.
 
 Now, you can safely read the values of buttons and axes on your joystick/gamepad!
 

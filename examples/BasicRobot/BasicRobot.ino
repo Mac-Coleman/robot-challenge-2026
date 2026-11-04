@@ -91,7 +91,7 @@ void loop()
     //You should call this at the beginning of your loop()!
     receiver.receive();
 
-    if (!receiver.getAlive()) 
+    if (!receiver.isAlive()) 
     {
         //Write your robot's "safe mode" here!
         //Define the actions that your robot should take if the connection with the controller is lost.

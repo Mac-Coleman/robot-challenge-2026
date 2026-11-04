@@ -32,7 +32,7 @@ class Receiver
     const char* getPassword();
     IPAddress getIpAddress();
     String getSSID();
-    bool getAlive();
+    bool isAlive();
   private:
     void _acknowledge(int message);
     const char* _robot_name;
