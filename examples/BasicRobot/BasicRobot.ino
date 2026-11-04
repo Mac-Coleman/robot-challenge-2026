@@ -14,8 +14,11 @@
 
 #include <Receiver.h>
 
-//Install these from the library manager:
-#include <Cdrv8833.h>
+//This is not really part of the project, but I need to include it this way because the library on the Arduino Library Manager is very out of date.
+//You do not need to install this in the library manager, it comes with the project.
+#include <vendored/Cdrv8833-patched/src/Cdrv8833.h>
+
+//Install this from the library manager:
 #include <ESP32Servo.h>
 
 #define MOTOR_L_PIN_1 2

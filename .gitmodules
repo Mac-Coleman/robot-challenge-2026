@@ -1,0 +1,3 @@
+[submodule "src/vendored/Cdrv8833-patched"]
+	path = src/vendored/Cdrv8833-patched
+	url = https://github.com/fiz1962/Cdrv8833.git

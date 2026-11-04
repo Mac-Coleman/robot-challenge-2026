@@ -96,9 +96,8 @@ All you have to do now is create a new Arduino sketch with `File` -> `New Sketch
 
 Follow the example at [./examples/BasicRobot/BasicRobot.ino](./examples/BasicRobot/BasicRobot.ino) to program your robot.
 
-If you use this `Cdrv8833` library, you will have to *downgrade* your board version in order to get it to compile. Go to the board manager in Arduino IDE, set `Type` to "Installed", scroll down until you find `esp32 by Espressif Systems`, choose the version dropdown menu where it says `3.3.XX`, then change it to `2.0.17`, and hit `INSTALL`.
-
-I am looking around for alternatives or patched versions of this library. I might vendor this dependency so you don't have to think about it.
+[!NOTE]
+The [`Cdrv8833`](https://github.com/shurillu/Cdrv8833/tree/main) library available on the Arduino library manager is outdated and won't work with newer versions of the Arduino ESP32 core. I have vendored a [patched version of `Cdrv8833`](https://github.com/fiz1962/Cdrv8833/tree/main). You can include it in your sketches like this: Instead of `#include <Cdrv8833.h>`, do `#include <vendored/Cdrv8833-patched/src/Cdrv8833.h>`.
 
 #####
 # Controlling your robot with the client
