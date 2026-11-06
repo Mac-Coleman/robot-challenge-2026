@@ -6,7 +6,7 @@ This project allows a robot to be programmed in Arduino IDE with C++, but in the
 
 # Arduino Library Installation, Setup, Template, and Examples
 <details>
-    <summary>The Arduino library and Arduino IDE is what you will use to write code and program your robot. Click to expand.</summary>
+    <summary>The Arduino library and Arduino IDE is what you will use to write code and program your robot. **Click to expand.**</summary>
 
 ## Library Setup
 This entire repository is an Arduino library. To install it, compress the repository into a .zip file.
@@ -22,14 +22,11 @@ All you have to do now is create a new Arduino sketch with `File` -> `New Sketch
 #include <Receiver.h>
 ```
 
-## Template
+## Template & Example
 A template that might help you write your robot's code is available at [./examples/Template/Template.ino](./examples/Template/Template.ino).
 You can open this template in Arduino IDE (after you've installed the Arduino Library) by clicking `File` -> `Examples` -> `Receiver` -> `Template`. You can then change this file and save it wherever you like.
 
 For a more thorough example, check the example at [./examples/BasicRobot/BasicRobot.ino](./examples/BasicRobot/BasicRobot.ino) to program your robot, or open it in Arduino IDE via `File` -> `Examples` -> `Receiver` -> `BasicRobot`.
-
-> [!NOTE]
-> The [`Cdrv8833`](https://github.com/shurillu/Cdrv8833/tree/main) library available on the Arduino library manager is outdated and won't work with newer versions of the Arduino ESP32 core. I have vendored a [patched version of `Cdrv8833`](https://github.com/fiz1962/Cdrv8833/tree/main). You can include it in your sketches like this: Instead of `#include <Cdrv8833.h>`, do `#include <vendored/Cdrv8833-patched/src/Cdrv8833.h>`.
 </details>
 
 #####
@@ -60,6 +57,10 @@ if (!wifi_okay) {
 ```
 
 Within your `void loop() { ... }` function, call `Receiver::receive()` at the beginning of the function. This will allow you to read the latest values of the connected gamepad.
+
+```cpp
+receive.receive();
+```
 
 > [!IMPORTANT]
 > You should call `Receiver::isAlive()` to check whether your robot is healthy.
@@ -107,7 +108,18 @@ Or, in even simpler terms:
 digitalWrite(LED_PIN, receiver.buttonY());
 ```
 
-#####
+# Arduino Libraries You Might Want
+There are a couple Arduino libraries that will probably be useful to you.
+The following can be installed with the Library Manager in Arduino IDE:
+* ESP32Servo
+
+The following is provided by this project, and you do not need to install it from the Library Manager.
+* Cdrv8833
+> [!NOTE]
+> The [`Cdrv8833`](https://github.com/shurillu/Cdrv8833/tree/main) library available on the Arduino library manager is outdated and won't work with newer versions of the Arduino ESP32 core.
+> I have vendored a [patched version of `Cdrv8833`](https://github.com/fiz1962/Cdrv8833/tree/main).
+> You can include it in your sketches like this: Instead of `#include <Cdrv8833.h>`, do `#include <vendored/Cdrv8833-patched/src/Cdrv8833.h>`.
+
 # Controlling your robot with the client
 ![The robot controller program running, showing some buttons being pressed.](./images/controller.png)
 There is a python client for controlling your robot. I have not written the setup instructions for it yet, but it requires `pygame`.
