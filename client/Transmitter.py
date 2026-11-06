@@ -155,7 +155,21 @@ def read_gamepad(joystick: Union[pygame.joystick.Joystick, None]) -> GamepadStat
     g.d_pad = d_pad_number
     return g
 
+_receive_buffer = b""
 
+def receive_and_unpack(sock: socket.socket):
+    global _receive_buffer
+    try:
+        data = sock.recv(4096)
+        messages = data.split(b"\n")
+        if len(messages) > 0:
+            messages[0] = _receive_buffer + messages[0]
+        _receive_buffer = messages[-1] 
+
+        for message in messages[:-1]:
+            print(message.decode("ascii"))
+    except BlockingIOError:
+        pass
 
 def pack_and_send_message(sock: socket.socket, gamepad: GamepadState): #When we get controllers, this should not be based on keys, this is just for testing.
     global _message_number
@@ -196,18 +210,36 @@ def pack_and_send_message(sock: socket.socket, gamepad: GamepadState): #When we 
 def control_thread(control_input_queue: queue.Queue, control_hz: int, keep_alive: threading.Event):
 
     clock = pygame.time.Clock()
-    sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+
+    send_sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+
+    recv_sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+    recv_sock.setblocking(False)
+    recv_sock.bind((get_local_ip(), ROBOT_PORT))
 
     while keep_alive.is_set():
         gamepad = GamepadState()
         while not control_input_queue.empty():
             gamepad = control_input_queue.get_nowait()
         
-        pack_and_send_message(sock, gamepad)
+        pack_and_send_message(send_sock, gamepad)
+        receive_and_unpack(recv_sock)
 
         clock.tick(control_hz)
 
-    sock.close()
+    send_sock.close()
+    recv_sock.close()
+
+def get_local_ip():
+    s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+    addr = "0.0.0.0"
+    try:
+        s.connect(("1.1.1.1", 80))
+        addr = s.getsockname()[0]
+    finally:
+        s.close()
+    print(f"Local IP address is {addr}")
+    return addr
 
 def display_thread(control_input_queue: queue.Queue, display_hz: int):
 

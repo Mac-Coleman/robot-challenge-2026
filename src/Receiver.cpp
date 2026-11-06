@@ -166,6 +166,19 @@ void Receiver::receive()
   _buttonStickRight = (gamepad.button_field & right_stick_mask) != 0;
 
   _lastReceive = millis();
+
+  unsigned int written = encode_base64(reinterpret_cast<unsigned char *>(&gamepad.control_number), sizeof(uint32_t), writebuffer);
+
+  if (written != 8) {
+    log_e("Incorrect number of bytes written in acknowledgement packet: %d, %s", written, writebuffer);
+  }
+
+  _udpSocket.beginPacket(remote, 1853);
+  _udpSocket.write(reinterpret_cast<const uint8_t *>("A:"), 2);
+  _udpSocket.write(writebuffer, strlen(reinterpret_cast<const char *>(writebuffer)));
+  _udpSocket.write('\n');
+  _udpSocket.endPacket();
+
 }
 
 bool Receiver::isAlive()
