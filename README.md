@@ -71,7 +71,7 @@ Within your `void loop() { ... }` function, call `Receiver::receive()` at the be
 
 ```cpp
 //Guard clause to exit function early if the robot has not received a valid control packet in the last 100 milliseconds.
-if (!receiver.isAlive()) {})
+if (!receiver.isAlive())
 {
     log_i("The robot hasn't received any valid commands for a while.");
     log_i("Now would be a good time to set the robot to a safe state so it doesn't go out of control.");
