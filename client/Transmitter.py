@@ -212,10 +212,7 @@ def control_thread(control_input_queue: queue.Queue, control_hz: int, keep_alive
     clock = pygame.time.Clock()
 
     send_sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
-
-    recv_sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
-    recv_sock.setblocking(False)
-    recv_sock.bind((get_local_ip(), ROBOT_PORT))
+    send_sock.setblocking(False)
 
     while keep_alive.is_set():
         gamepad = GamepadState()
@@ -223,12 +220,11 @@ def control_thread(control_input_queue: queue.Queue, control_hz: int, keep_alive
             gamepad = control_input_queue.get_nowait()
         
         pack_and_send_message(send_sock, gamepad)
-        receive_and_unpack(recv_sock)
+        receive_and_unpack(send_sock)
 
         clock.tick(control_hz)
 
     send_sock.close()
-    recv_sock.close()
 
 def get_local_ip():
     s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)

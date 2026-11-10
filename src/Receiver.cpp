@@ -173,7 +173,7 @@ void Receiver::receive()
     log_e("Incorrect number of bytes written in acknowledgement packet: %d, %s", written, writebuffer);
   }
 
-  _udpSocket.beginPacket(remote, 1853);
+  _udpSocket.beginPacket(remote, port);
   _udpSocket.write(reinterpret_cast<const uint8_t *>("A:"), 2);
   _udpSocket.write(writebuffer, strlen(reinterpret_cast<const char *>(writebuffer)));
   _udpSocket.write('\n');
