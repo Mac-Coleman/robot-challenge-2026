@@ -299,7 +299,7 @@ def display_thread(control_input_queue: queue.Queue, display_hz: int):
 
 
     while True:
-        gamepad = read_gamepad(None)
+        gamepad = read_gamepad(joystick)
         try:
             control_input_queue.put_nowait(gamepad)
         except queue.Full:
