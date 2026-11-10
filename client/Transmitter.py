@@ -70,9 +70,9 @@ class GamepadState:
     connected:          bool      = False
     left_stick_x:       float     = 0.0             # Axis 0
     left_stick_y:       float     = 0.0             # Axis 1
-    right_stick_x:      float     = 0.0             # Axis 3
-    right_stick_y:      float     = 0.0             # Axis 4
-    left_trigger:       float     = 0.0             # Axis 2
+    right_stick_x:      float     = 0.0             # Axis 2
+    right_stick_y:      float     = 0.0             # Axis 3
+    left_trigger:       float     = 0.0             # Axis 4
     right_trigger:      float     = 0.0             # Axis 5
     d_pad:              Direction = Direction.NONE  #
     right_bumper:       bool      = False           # Button 5
@@ -93,9 +93,9 @@ def read_gamepad(joystick: Union[pygame.joystick.Joystick, None]) -> GamepadStat
         g.connected = True
         g.left_stick_x = joystick.get_axis(0)
         g.left_stick_y = joystick.get_axis(1)
-        g.right_stick_x = joystick.get_axis(3)
-        g.right_stick_y = joystick.get_axis(4)
-        g.left_trigger = joystick.get_axis(2)
+        g.right_stick_x = joystick.get_axis(2)
+        g.right_stick_y = joystick.get_axis(3)
+        g.left_trigger = joystick.get_axis(4)
         g.right_trigger = joystick.get_axis(5)
 
         g.right_bumper = joystick.get_button(5)
