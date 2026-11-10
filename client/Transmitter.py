@@ -110,6 +110,26 @@ def read_gamepad(joystick: Union[pygame.joystick.Joystick, None]) -> GamepadStat
         g.left_stick_button = joystick.get_button(8)
         g.guide_button = joystick.get_button(10)
 
+        match joystick.get_hat(0):
+            case (0, 0):
+                g.d_pad = Direction.NONE
+            case (0, 1):
+                g.d_pad = Direction.NORTH
+            case (0, -1):
+                g.d_pad = Direction.SOUTH
+            case (-1, 0):
+                g.d_pad = Direction.WEST
+            case (-1, 1):
+                g.d_pad = Direction.NORTHWEST
+            case (-1, -1):
+                g.d_pad = Direction.SOUTHWEST
+            case (1, 0):
+                g.d_pad = Direction.EAST
+            case (1, 1):
+                g.d_pad = Direction.NORTHEAST
+            case (1, -1):
+                g.d_pad = Direction.SOUTHEAST
+
         # Still need to handle d_pad.
         return g
 
