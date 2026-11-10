@@ -130,7 +130,6 @@ def read_gamepad(joystick: Union[pygame.joystick.Joystick, None]) -> GamepadStat
             case (1, -1):
                 g.d_pad = Direction.SOUTHEAST
 
-        # Still need to handle d_pad.
         return g
 
     keys = pygame.key.get_pressed()
