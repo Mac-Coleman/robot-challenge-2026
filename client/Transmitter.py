@@ -2,6 +2,7 @@ import pygame, sys, math, argparse, struct, base64, socket, threading, queue
 from dataclasses import dataclass
 from enum import IntEnum
 from typing import Union
+import time
 
 # Really, really bad controller visualizer to assist in using the robots.
 
@@ -175,9 +176,10 @@ def read_gamepad(joystick: Union[pygame.joystick.Joystick, None]) -> GamepadStat
     return g
 
 _receive_buffer = b""
+_awaiting_acknowledge = {}
 
 def receive_and_unpack(sock: socket.socket):
-    global _receive_buffer
+    global _receive_buffer, _awaiting_acknowledge
     try:
         data = sock.recv(4096)
         messages = data.split(b"\n")
@@ -185,13 +187,35 @@ def receive_and_unpack(sock: socket.socket):
             messages[0] = _receive_buffer + messages[0]
         _receive_buffer = messages[-1] 
 
+        max_packet_number = 0
+        max_rtl = 0
+
         for message in messages[:-1]:
-            print(message.decode("ascii"))
+            as_str = message.decode("ascii")
+            if as_str.startswith("A:"):
+                # It is an "ACK" packet
+                acknowledged_packet = int.from_bytes(base64.b64decode(as_str[2:]), byteorder="little")
+
+                roundtrip_latency = time.monotonic_ns() - _awaiting_acknowledge[acknowledged_packet]
+                max_rtl = max(max_rtl, roundtrip_latency)
+
+                max_packet_number = max(max_packet_number, acknowledged_packet)
+            else:
+                # It is an "Info" packet ("I:")
+                print(base64.b64decode(as_str[2:]).decode("utf-8"))
+
+        # Clean up old packets from awaiting_acknowledge dictionary
+        for number in list(_awaiting_acknowledge):
+            if number <= max_packet_number:
+                _awaiting_acknowledge.pop(number, 0)
+
+        print(f"{max_packet_number}\t{max_rtl / (1000 * 1000)}\t{list(_awaiting_acknowledge)}")
+        # print(max_rtl / (1000 * 1000))
     except BlockingIOError:
         pass
 
 def pack_and_send_message(sock: socket.socket, gamepad: GamepadState): #When we get controllers, this should not be based on keys, this is just for testing.
-    global _message_number
+    global _message_number, _awaiting_acknowledge
     control_message_number_bytes = _message_number.to_bytes(4, byteorder='little')
 
     button_number = 0
@@ -222,6 +246,7 @@ def pack_and_send_message(sock: socket.socket, gamepad: GamepadState): #When we 
 
     #print(f"{int.from_bytes(message_bytes, byteorder='little'):0248b}")
     sock.sendto(base64.b64encode(message_bytes) + b'\n', (ROBOT_IP_ADDRESS, ROBOT_PORT))
+    _awaiting_acknowledge[_message_number] = time.monotonic_ns()
 
     _message_number += 1
     _message_number %= 2**(4*8)
