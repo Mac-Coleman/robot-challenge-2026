@@ -180,8 +180,7 @@ _awaiting_acknowledge = {}
 def receive_and_unpack(sock: socket.socket):
     global _awaiting_acknowledge
     try:
-        data, address = sock.recvfrom(4096)
-        print(data)
+        data = sock.recv(4096)
         messages = data.split(b"\n")
         # Let's assume that only completed packets are available to be read from the socket. I *think* this is how it works.
 
@@ -192,7 +191,7 @@ def receive_and_unpack(sock: socket.socket):
             if len(message) == 0:
                 continue
             as_str = message.decode("ascii")
-            print(as_str)
+            
             if as_str.startswith("A:"):
                 # It is an "ACK" packet
                 acknowledged_packet = int.from_bytes(base64.b64decode(as_str[2:]), byteorder="little")
@@ -246,11 +245,18 @@ def pack_and_send_message(sock: socket.socket, gamepad: GamepadState): #When we 
     message_bytes = b"".join([control_message_number_bytes, button_bytes, d_pad_bytes, rt_bytes, lt_bytes, rsx_bytes, rsy_bytes, lsx_bytes, lsy_bytes])
 
     #print(f"{int.from_bytes(message_bytes, byteorder='little'):0248b}")
-    sock.sendto(base64.b64encode(message_bytes) + b'\n', (ROBOT_IP_ADDRESS, ROBOT_PORT))
+    sock.send(base64.b64encode(message_bytes) + b'\n')
     _awaiting_acknowledge[_message_number] = time.monotonic_ns()
 
     _message_number += 1
     _message_number %= 2**(4*8)
+
+def recv_thread(recv_hz: int, sock: socket.socket, keep_alive: threading.Event):
+    clock = pygame.time.Clock()
+
+    while keep_alive.is_set():
+        receive_and_unpack(sock)
+        clock.tick(recv_hz)
 
 def control_thread(control_input_queue: queue.Queue, control_hz: int, keep_alive: threading.Event):
 
@@ -258,6 +264,10 @@ def control_thread(control_input_queue: queue.Queue, control_hz: int, keep_alive
 
     send_sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
     send_sock.setblocking(False)
+    send_sock.connect((ROBOT_IP_ADDRESS, ROBOT_PORT))
+
+    recv = threading.Thread(target=recv_thread, args=(500, send_sock, keep_alive))
+    recv.start()
 
     while keep_alive.is_set():
         gamepad = GamepadState()
@@ -265,10 +275,10 @@ def control_thread(control_input_queue: queue.Queue, control_hz: int, keep_alive
             gamepad = control_input_queue.get_nowait()
         
         pack_and_send_message(send_sock, gamepad)
-        receive_and_unpack(send_sock)
 
         clock.tick(control_hz)
 
+    recv.join()
     send_sock.close()
 
 def get_local_ip():
