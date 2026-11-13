@@ -191,7 +191,7 @@ def receive_and_unpack(sock: socket.socket):
             if len(message) == 0:
                 continue
             as_str = message.decode("ascii")
-            
+
             if as_str.startswith("A:"):
                 # It is an "ACK" packet
                 acknowledged_packet = int.from_bytes(base64.b64decode(as_str[2:]), byteorder="little")
@@ -258,7 +258,7 @@ def recv_thread(recv_hz: int, sock: socket.socket, keep_alive: threading.Event):
         receive_and_unpack(sock)
         clock.tick(recv_hz)
 
-def control_thread(control_input_queue: queue.Queue, control_hz: int, keep_alive: threading.Event):
+def control_thread(control_input_queue: queue.Queue, control_hz: int, recv_hz: int, keep_alive: threading.Event):
 
     clock = pygame.time.Clock()
 
@@ -266,7 +266,7 @@ def control_thread(control_input_queue: queue.Queue, control_hz: int, keep_alive
     send_sock.setblocking(False)
     send_sock.connect((ROBOT_IP_ADDRESS, ROBOT_PORT))
 
-    recv = threading.Thread(target=recv_thread, args=(500, send_sock, keep_alive))
+    recv = threading.Thread(target=recv_thread, args=(recv_hz, send_sock, keep_alive))
     recv.start()
 
     while keep_alive.is_set():
@@ -536,20 +536,31 @@ def main():
     )
 
     parser.add_argument('-f', '--fps-limit', action='store', default=60, type=int, help="The maximum framerate to display in FPS. You can lower this if your monitor has a lower refresh rate.")
-    parser.add_argument('-c', '--control-hz', action='store', default=60, type=int, help="Frequency at which packets are sent to the robot in Hz.")
+    parser.add_argument('-c', '--control-hz', action='store', default=60, type=int, help="Frequency at which packets are sent to the robot in Hz. Must be lower than `fps-limit`.")
+    parser.add_argument('-r', '--receive-hz', action='store', default=500, type=int, help="Frequency at which packets are read from the robot in Hz. Must be higher than `control-hz`.")
     parser.add_argument('-d', '--dummy-mode', action='store_true', help="Prevents the program from issuing control commands to the robot.")
 
     args = parser.parse_args()
+
+    if args.fps_limit < args.control_hz:
+        print("FPS limit must be higher than control message frequency!")
+        return
+
+    if args.receive_hz < args.control_hz:
+        print("Receive message frequency must higher than control message frequency!")
+        return
+
     print(f"Launching in {"dummy" if args.dummy_mode else "control"} mode.")
     print(f"Framerate will be capped to {args.fps_limit} FPS.")
     print(f"Robot control message rate is {args.control_hz} Hz.")
+    print(f"Controller message receive rate is {args.receive_hz} Hz.")
 
     pygame.init()
 
     q = queue.Queue()
     keep_alive = threading.Event()
     keep_alive.set()
-    ct = threading.Thread(target=control_thread, args=(q, args.control_hz, keep_alive), daemon=True)
+    ct = threading.Thread(target=control_thread, args=(q, args.control_hz, args.receive_hz, keep_alive), daemon=True)
     if not args.dummy_mode:
         ct.start()
     display_thread(q, args.fps_limit)
