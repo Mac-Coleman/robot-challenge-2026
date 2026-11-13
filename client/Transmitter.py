@@ -209,8 +209,6 @@ def receive_and_unpack(sock: socket.socket):
             if number <= max_packet_number:
                 _awaiting_acknowledge.pop(number, 0)
 
-        print(f"{max_packet_number}\t{max_rtl / (1000 * 1000)}\t{list(_awaiting_acknowledge)}")
-        # print(max_rtl / (1000 * 1000))
     except BlockingIOError:
         pass
 
