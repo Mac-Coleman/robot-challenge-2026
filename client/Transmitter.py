@@ -175,23 +175,24 @@ def read_gamepad(joystick: Union[pygame.joystick.Joystick, None]) -> GamepadStat
     g.d_pad = d_pad_number
     return g
 
-_receive_buffer = b""
 _awaiting_acknowledge = {}
 
 def receive_and_unpack(sock: socket.socket):
-    global _receive_buffer, _awaiting_acknowledge
+    global _awaiting_acknowledge
     try:
-        data = sock.recv(4096)
+        data, address = sock.recvfrom(4096)
+        print(data)
         messages = data.split(b"\n")
-        if len(messages) > 0:
-            messages[0] = _receive_buffer + messages[0]
-        _receive_buffer = messages[-1] 
+        # Let's assume that only completed packets are available to be read from the socket. I *think* this is how it works.
 
         max_packet_number = 0
         max_rtl = 0
 
-        for message in messages[:-1]:
+        for message in messages:
+            if len(message) == 0:
+                continue
             as_str = message.decode("ascii")
+            print(as_str)
             if as_str.startswith("A:"):
                 # It is an "ACK" packet
                 acknowledged_packet = int.from_bytes(base64.b64decode(as_str[2:]), byteorder="little")

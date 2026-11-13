@@ -103,82 +103,99 @@ bool Receiver::begin()
   if (!ret) {
     log_e("No sockets available.");
   }
+  _udpSocket.setTimeout(0); //Make calls to readBytesUntil return immediately if terminator is not found.
   return ret;
 }
 
 void Receiver::receive()
 {
-  size_t ret = _udpSocket.parsePacket();
-  if (ret == 0) {
-    log_i("No packet available.");
-    return;
-  }
-
   unsigned char readbuffer[256];
   unsigned char writebuffer[256];
 
-  IPAddress remote = _udpSocket.remoteIP();
-  int port = _udpSocket.remotePort();
-  log_i("Packet received from %s:%d.", remote.toString().c_str(), port);
+  size_t ret = _udpSocket.parsePacket();
+  if (ret == 0) {
+    log_d("No packet available.");
+    return;
+  }
 
   size_t read_len = _udpSocket.readBytesUntil('\n', readbuffer, 255);
   readbuffer[read_len] = 0; //Add null terminator.
-  log_i("Packet content: '%s'", readbuffer);
+  log_d("Packet content: '%s'", readbuffer);
 
-  unsigned char decoded_buffer[256];
-  unsigned int decoded_length = decode_base64(readbuffer, decoded_buffer);
-  if (decoded_length < 256) {
-    decoded_buffer[decoded_length] = '\0';
+  while (ret != 0 && read_len != 0) {
+    IPAddress remote = _udpSocket.remoteIP();
+    int port = _udpSocket.remotePort();
+    log_d("Packet received from %s:%d.", remote.toString().c_str(), port);
+
+    unsigned char decoded_buffer[256];
+    unsigned int decoded_length = decode_base64(readbuffer, decoded_buffer);
+    if (decoded_length < 256) {
+      decoded_buffer[decoded_length] = '\0';
+    };
+    log_d("Decoded content: '%s'",(char *) decoded_buffer);
+
+    if (decoded_length != sizeof(GamepadMessage)) {
+      log_e("Decoded message has invalid size %d.", decoded_length);
+      return;
+    };
+
+    GamepadMessage gamepad;
+    memcpy(&gamepad, decoded_buffer, sizeof(GamepadMessage));
+
+    if (!validateGamepadMessage(&gamepad)) {
+      log_e("Gamepad message failed validation.");
+      return;
+    }
+
+    log_d("Gamepad message passed validation.");
+
+    _leftStickX = gamepad.left_stick_x;
+    _leftStickY = gamepad.left_stick_y;
+    _rightStickX = gamepad.right_stick_x;
+    _rightStickY = gamepad.right_stick_y;
+    _triggerLeft = gamepad.left_trigger;
+    _triggerRight = gamepad.right_trigger;
+
+    _bumperRight      = (gamepad.button_field & right_bumper_mask) != 0;
+    _bumperLeft       = (gamepad.button_field & left_bumper_mask) != 0;
+    _buttonStart      = (gamepad.button_field & start_mask) != 0;
+    _buttonBack       = (gamepad.button_field & back_mask) != 0;
+    _buttonA          = (gamepad.button_field & ba_mask) != 0;
+    _buttonB          = (gamepad.button_field & bb_mask) != 0;
+    _buttonX          = (gamepad.button_field & bx_mask) != 0;
+    _buttonY          = (gamepad.button_field & by_mask) != 0;
+    _buttonStickLeft  = (gamepad.button_field & left_stick_mask) != 0;
+    _buttonStickRight = (gamepad.button_field & right_stick_mask) != 0;
+
+    _lastReceive = millis();
+
+    unsigned int written = encode_base64(reinterpret_cast<unsigned char *>(&gamepad.control_number), sizeof(uint32_t), writebuffer);
+
+    if (written != 8) {
+      log_e("Incorrect number of bytes written in acknowledgement packet: %d, %s", written, writebuffer);
+    }
+
+    _udpSocket.beginPacket(remote, port);
+    _udpSocket.write(reinterpret_cast<const uint8_t *>("A:"), 2);
+    _udpSocket.write(writebuffer, strlen(reinterpret_cast<const char *>(writebuffer)));
+    _udpSocket.write('\n');
+    _udpSocket.endPacket();
+
+    //Parse and read data from next packet.
+    ret = _udpSocket.parsePacket();
+    if (ret == 0) {
+      log_d("No more packets available.");
+      continue;
+    } else {
+      log_d("Packet available.");
+    };
+
+    //Attempt to read next bytes
+    read_len = _udpSocket.readBytesUntil('\n', readbuffer, 255);
+    readbuffer[read_len] = 0; //Add null terminator.
+    log_d("Packet content: '%s'", readbuffer);
+
   };
-  log_d("Decoded content: '%s'",(char *) decoded_buffer);
-
-  if (decoded_length != sizeof(GamepadMessage)) {
-    log_e("Decoded message has invalid size %d.", decoded_length);
-    return;
-  };
-
-  GamepadMessage gamepad;
-  memcpy(&gamepad, decoded_buffer, sizeof(GamepadMessage));
-
-  if (!validateGamepadMessage(&gamepad)) {
-    log_e("Gamepad message failed validation.");
-    return;
-  }
-
-  log_d("Gamepad message passed validation.");
-
-  _leftStickX = gamepad.left_stick_x;
-  _leftStickY = gamepad.left_stick_y;
-  _rightStickX = gamepad.right_stick_x;
-  _rightStickY = gamepad.right_stick_y;
-  _triggerLeft = gamepad.left_trigger;
-  _triggerRight = gamepad.right_trigger;
-
-  _bumperRight      = (gamepad.button_field & right_bumper_mask) != 0;
-  _bumperLeft       = (gamepad.button_field & left_bumper_mask) != 0;
-  _buttonStart      = (gamepad.button_field & start_mask) != 0;
-  _buttonBack       = (gamepad.button_field & back_mask) != 0;
-  _buttonA          = (gamepad.button_field & ba_mask) != 0;
-  _buttonB          = (gamepad.button_field & bb_mask) != 0;
-  _buttonX          = (gamepad.button_field & bx_mask) != 0;
-  _buttonY          = (gamepad.button_field & by_mask) != 0;
-  _buttonStickLeft  = (gamepad.button_field & left_stick_mask) != 0;
-  _buttonStickRight = (gamepad.button_field & right_stick_mask) != 0;
-
-  _lastReceive = millis();
-
-  unsigned int written = encode_base64(reinterpret_cast<unsigned char *>(&gamepad.control_number), sizeof(uint32_t), writebuffer);
-
-  if (written != 8) {
-    log_e("Incorrect number of bytes written in acknowledgement packet: %d, %s", written, writebuffer);
-  }
-
-  _udpSocket.beginPacket(remote, port);
-  _udpSocket.write(reinterpret_cast<const uint8_t *>("A:"), 2);
-  _udpSocket.write(writebuffer, strlen(reinterpret_cast<const char *>(writebuffer)));
-  _udpSocket.write('\n');
-  _udpSocket.endPacket();
-
 }
 
 bool Receiver::isAlive()
