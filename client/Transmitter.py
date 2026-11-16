@@ -403,8 +403,8 @@ def display_thread(control_input_queue: queue.Queue, ping_queue: queue.Queue, di
         # Triggers
         left_trigger_box = pygame.Rect(50, 200, 100, 200)
         right_trigger_box = pygame.Rect(width-50-100, 200, 100, 200)
-        pygame.draw.rect(screen, PLATINUM if gamepad.left_trigger != 0.0 else DARK_GRAPHITE, left_trigger_box.inflate(4, 4))
-        pygame.draw.rect(screen, PLATINUM if gamepad.right_trigger != 0.0 else DARK_GRAPHITE, right_trigger_box.inflate(4, 4))
+        pygame.draw.rect(screen, PLATINUM if gamepad.left_trigger > 0.01 else DARK_GRAPHITE, left_trigger_box.inflate(4, 4))
+        pygame.draw.rect(screen, PLATINUM if gamepad.right_trigger > 0.01 else DARK_GRAPHITE, right_trigger_box.inflate(4, 4))
 
         lt_fill = pygame.Rect(0, 0, 100, int(200 * gamepad.left_trigger))
         rt_fill = pygame.Rect(0, 0, 100, int(200 * gamepad.right_trigger))
