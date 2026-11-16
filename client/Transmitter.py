@@ -177,7 +177,7 @@ def read_gamepad(joystick: Union[pygame.joystick.Joystick, None]) -> GamepadStat
 
 _awaiting_acknowledge = {}
 
-def receive_and_unpack(sock: socket.socket):
+def receive_and_unpack(sock: socket.socket, ping_queue: queue.Queue):
     global _awaiting_acknowledge
     try:
         data = sock.recv(4096)
@@ -185,7 +185,8 @@ def receive_and_unpack(sock: socket.socket):
         # Let's assume that only completed packets are available to be read from the socket. I *think* this is how it works.
 
         max_packet_number = 0
-        max_rtl = 0
+
+        rtl_pings = []
 
         for message in messages:
             if len(message) == 0:
@@ -197,12 +198,16 @@ def receive_and_unpack(sock: socket.socket):
                 acknowledged_packet = int.from_bytes(base64.b64decode(as_str[2:]), byteorder="little")
 
                 roundtrip_latency = time.monotonic_ns() - _awaiting_acknowledge[acknowledged_packet]
-                max_rtl = max(max_rtl, roundtrip_latency)
+                rtl_pings.append(roundtrip_latency)
+
 
                 max_packet_number = max(max_packet_number, acknowledged_packet)
             else:
                 # It is an "Info" packet ("I:")
                 print(base64.b64decode(as_str[2:]).decode("utf-8"))
+
+        if len(rtl_pings) > 0:
+            ping_queue.put_nowait(rtl_pings)
 
         # Clean up old packets from awaiting_acknowledge dictionary
         for number in list(_awaiting_acknowledge):
@@ -249,14 +254,14 @@ def pack_and_send_message(sock: socket.socket, gamepad: GamepadState): #When we 
     _message_number += 1
     _message_number %= 2**(4*8)
 
-def recv_thread(recv_hz: int, sock: socket.socket, keep_alive: threading.Event):
+def recv_thread(ping_queue: queue.Queue, recv_hz: int, sock: socket.socket, keep_alive: threading.Event):
     clock = pygame.time.Clock()
 
     while keep_alive.is_set():
-        receive_and_unpack(sock)
+        receive_and_unpack(sock, ping_queue)
         clock.tick(recv_hz)
 
-def control_thread(control_input_queue: queue.Queue, control_hz: int, recv_hz: int, keep_alive: threading.Event):
+def control_thread(control_input_queue: queue.Queue, ping_queue: queue.Queue, control_hz: int, recv_hz: int, keep_alive: threading.Event):
 
     clock = pygame.time.Clock()
 
@@ -264,7 +269,7 @@ def control_thread(control_input_queue: queue.Queue, control_hz: int, recv_hz: i
     send_sock.setblocking(False)
     send_sock.connect((ROBOT_IP_ADDRESS, ROBOT_PORT))
 
-    recv = threading.Thread(target=recv_thread, args=(recv_hz, send_sock, keep_alive))
+    recv = threading.Thread(target=recv_thread, args=(ping_queue, recv_hz, send_sock, keep_alive))
     recv.start()
 
     while keep_alive.is_set():
@@ -290,13 +295,17 @@ def get_local_ip():
     print(f"Local IP address is {addr}")
     return addr
 
-def display_thread(control_input_queue: queue.Queue, display_hz: int):
+def display_thread(control_input_queue: queue.Queue, ping_queue: queue.Queue, display_hz: int):
 
     clock = pygame.time.Clock()
 
     joystick = None
 
     pygame.joystick.init()
+
+    last_message_receive_ns = 0
+    pings = []
+    max_pings = 250
 
     joysticks = [pygame.joystick.Joystick(x) for x in range(pygame.joystick.get_count())]
     if len(joysticks) == 1:
@@ -313,6 +322,8 @@ def display_thread(control_input_queue: queue.Queue, display_hz: int):
         print("No joystick detected, falling back to keyboard.")
 
     label_font = pygame.font.SysFont('lucidaconsole', 12)
+    rtl_font = pygame.font.SysFont('lucidaconsole', 18)
+    status_font = pygame.font.SysFont('lucidaconsole', 20)
     button_font = pygame.font.SysFont('lucidaconsole', 32)
 
     width, height = 1000, 750
@@ -324,6 +335,8 @@ def display_thread(control_input_queue: queue.Queue, display_hz: int):
     BLUE = (64, 64, 255)
     PLATINUM = (235, 235, 235)
     RED = (255, 64, 64)
+    YELLOW = (255, 255, 0)
+    GREEN = (0, 255, 0)
 
     yb_label = button_font.render('Y', True, PLATINUM)
     bb_label = button_font.render('B', True, PLATINUM)
@@ -357,6 +370,14 @@ def display_thread(control_input_queue: queue.Queue, display_hz: int):
             control_input_queue.put_nowait(gamepad)
         except queue.Full:
             pass
+
+        while not ping_queue.empty():
+            try:
+                pings.extend(ping_queue.get_nowait())
+                pings = pings[-max_pings:]
+                last_message_receive_ns = time.monotonic_ns()
+            except queue.Empty:
+                pass
 
         screen.fill(DARK_GRAPHITE)
 
@@ -513,11 +534,41 @@ def display_thread(control_input_queue: queue.Queue, display_hz: int):
         screen.blit(back_label, bl_rect)
         screen.blit(start_label, sl_rect)
 
-        status = "Connecting to your robot..." if pygame.key.get_focused() else "Click this window to control your robot!"
+        max_rtl = 0 if len(pings) == 0 else max(pings) / 1000000
+        med_rtl = 0 if len(pings) == 0 else sorted(pings)[len(pings)//2] / 1000000
+        las_rtl = 0 if len(pings) == 0 else pings[-1] / 1000000
 
-        status_label = label_font.render(status, True, PLATINUM)
+        is_alive = (time.monotonic_ns() - last_message_receive_ns) < 500 * 1000000
+
+        max_rtl_color = GREEN if max_rtl < 30 else YELLOW if max_rtl < 60 else RED
+        med_rtl_color = GREEN if med_rtl < 30 else YELLOW if med_rtl < 60 else RED
+        las_rtl_color = GREEN if las_rtl < 30 else YELLOW if las_rtl < 60 else RED
+
+        max_rtl_label = rtl_font.render(f"Max RTL: {f"{max_rtl:>6.2f} ms" if is_alive else "???"}", True, max_rtl_color)
+        med_rtl_label = rtl_font.render(f"Med RTL: {f"{med_rtl:>6.2f} ms" if is_alive else "???"}", True, med_rtl_color)
+        las_rtl_label = rtl_font.render(f"    RTL: {f"{las_rtl:>6.2f} ms" if is_alive else "???"}", True, las_rtl_color)
+
+
+        med_rtl_rect = med_rtl_label.get_rect()
+        med_rtl_rect.midleft = (width-200, 35)
+
+        max_rtl_rect = max_rtl_label.get_rect()
+        max_rtl_rect.bottomleft = med_rtl_rect.topleft
+
+        las_rtl_rect = las_rtl_label.get_rect()
+        las_rtl_rect.topleft = med_rtl_rect.bottomleft
+
+        screen.blit(max_rtl_label, max_rtl_rect)
+        screen.blit(med_rtl_label, med_rtl_rect)
+        screen.blit(las_rtl_label, las_rtl_rect)
+
+        status = "Not connected. Check Wi-Fi network/Robot power." if not is_alive else "Connected to robot."
+        if is_alive and not pygame.key.get_focused():
+            status = "Click this window to control your robot!"
+
+        status_label = status_font.render(status, True, PLATINUM)
         status_rect = status_label.get_rect()
-        status_rect.center = (width//2, 35)
+        status_rect.midleft = (20, 35)
         screen.blit(status_label, status_rect)
 
         for event in pygame.event.get():
@@ -555,13 +606,14 @@ def main():
 
     pygame.init()
 
-    q = queue.Queue()
+    control_queue = queue.Queue()
+    ping_queue = queue.Queue()
     keep_alive = threading.Event()
     keep_alive.set()
-    ct = threading.Thread(target=control_thread, args=(q, args.control_hz, args.receive_hz, keep_alive), daemon=True)
+    ct = threading.Thread(target=control_thread, args=(control_queue, ping_queue, args.control_hz, args.receive_hz, keep_alive), daemon=True)
     if not args.dummy_mode:
         ct.start()
-    display_thread(q, args.fps_limit)
+    display_thread(control_queue, ping_queue, args.fps_limit)
     keep_alive.clear()
     if not args.dummy_mode:
         ct.join()
